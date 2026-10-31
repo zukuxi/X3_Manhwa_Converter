@@ -42,6 +42,8 @@
       thresholdLabel: '黑白阈值（无抖动时）',
       contrastLabel: '对比度',
       brightnessLabel: '亮度',
+      gammaLabel: 'Gamma',
+      maskModeLabel: '蒙版兼容模式（黑页 PDF）',
       strengthLabel: '抖动强度',
       mergeLabel: '每几个 PDF 合并成一本',
       titleLabel: '自定义书名（可选）',
@@ -115,6 +117,8 @@
       thresholdLabel: 'Threshold (when dithering is off)',
       contrastLabel: 'Contrast',
       brightnessLabel: 'Brightness',
+      gammaLabel: 'Gamma',
+      maskModeLabel: 'Mask compatibility mode (for black-page PDFs)',
       strengthLabel: 'Dithering strength',
       mergeLabel: 'Merge every N PDFs into one book',
       titleLabel: 'Custom book title (optional)',
@@ -275,7 +279,7 @@
     let added = 0;
 
     for (const file of arr) {
-      const key = fileKey(file);
+      const key = fileKey(file) + '|mask:' + ($('maskMode').checked ? 'print' : 'display');
 
       if (!known.has(key)) {
         // Internal states are language-independent.
@@ -646,6 +650,18 @@
       : 255;
   }
 
+  function applyGamma(array, gamma) {
+    if (!Number.isFinite(gamma) || gamma === 1) return;
+    const lut = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) {
+      lut[i] = Math.max(0, Math.min(255,
+        Math.round(255 * Math.pow(i / 255, gamma))));
+    }
+    for (let i = 0; i < array.length; i++) {
+      array[i] = lut[Math.max(0, Math.min(255, Math.round(array[i])))];
+    }
+  }
+
   function processGray(
     gray,
     mode,
@@ -653,7 +669,8 @@
     threshold,
     contrast,
     brightness,
-    strength
+    strength,
+    gamma
   ) {
     const array = new Float32Array(gray.length);
 
@@ -661,6 +678,7 @@
       array[index] = clamp(gray[index] + brightness * 1.5);
     }
 
+    applyGamma(array, gamma);
     contrastPixels(array, contrast);
 
     if (mode === 'none' || strength === 0) {
@@ -1066,6 +1084,8 @@
       threshold: Number($('threshold').value),
       contrast: Number($('contrast').value),
       brightness: Number($('brightness').value),
+      gamma: Number($('gamma').value),
+      maskMode: $('maskMode').checked,
       strength: Number($('strength').value)
     };
   }
@@ -1079,7 +1099,8 @@
       current.threshold,
       current.contrast,
       current.brightness,
-      current.strength
+      current.strength,
+      current.gamma
     );
 
     const canvas = $('preview');
@@ -1187,7 +1208,8 @@
             await page.render({
               canvasContext: context,
               viewport,
-              background: 'rgb(255,255,255)'
+              background: 'rgb(255,255,255)',
+              intent: $('maskMode').checked ? 'print' : 'display'
             }).promise;
 
             if (requestId !== previewRequestId) {
@@ -1287,12 +1309,13 @@
 
   [
     'depth', 'dither', 'threshold',
-    'contrast', 'brightness', 'strength'
+    'contrast', 'brightness', 'gamma', 'maskMode', 'strength'
   ].forEach(id => {
     $(id).addEventListener('input', () => {
       for (const [inputId, outputId] of [
         ['threshold', 'thresholdValue'],
         ['brightness', 'brightnessValue'],
+        ['gamma', 'gammaValue'],
         ['strength', 'strengthValue']
       ]) {
         const output = $(outputId);
@@ -1302,6 +1325,11 @@
             $(inputId).value +
             (inputId === 'strength' ? '%' : '');
         }
+      }
+
+      if (id === 'maskMode') {
+        loadPreview();
+        return;
       }
 
       if (previewPages[previewIndex]) {
@@ -1334,7 +1362,8 @@
         current.threshold,
         current.contrast,
         current.brightness,
-        current.strength
+        current.strength,
+        current.gamma
       );
       pages.push(packPage(processed, current.depth));
       pageTotal++;
@@ -1391,7 +1420,8 @@
           await page.render({
             canvasContext: context,
             viewport,
-            background: 'rgb(255,255,255)'
+            background: 'rgb(255,255,255)',
+            intent: current.maskMode ? 'print' : 'display'
           }).promise;
 
           stitcher.appendCanvas(canvas, gray => {

@@ -262,6 +262,17 @@ button:disabled { opacity: .45; cursor: not-allowed; }
     </div>
 
     <div class="field">
+      <label for="gamma" data-i18n="gammaLabel">Gamma</label>
+      <input id="gamma" type="range" min="0.50" max="2.00" step="0.05" value="1.00">
+      <span class="slider-value" id="gammaValue">1.00</span>
+    </div>
+
+    <div class="field">
+      <label for="maskMode" data-i18n="maskModeLabel">蒙版兼容模式（黑页 PDF）</label>
+      <input id="maskMode" type="checkbox">
+    </div>
+
+    <div class="field">
       <label for="strength" data-i18n="strengthLabel">抖动强度</label>
       <input id="strength" type="range" min="0" max="100" step="5" value="100">
       <span class="slider-value" id="strengthValue">100%</span>
