@@ -203,10 +203,10 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 </div>
 
 <section class="panel">
-  <h1 data-i18n="heading">X3 PDF → XTC / XTCH 连续拼接测试版</h1>
+  <h1 data-i18n="heading">X3 PDF / 漫画图片 → XTC / XTCH 转换器</h1>
 
   <p class="hint" data-i18n="lead">
-    PDF 页面按比例缩放到 528 像素宽后连续拼接，不重叠；每累计 792 像素输出一页，最后不足部分在底部补白。文件只在本机浏览器处理。
+    PDF 和漫画图片统一使用 test 的 528×792 连续拼接算法；PDF 以 2 倍渲染，图片按原始分辨率读取，连续拼接、不重叠，每累计 792 像素输出一页。文件只在本机浏览器处理。
   </p>
 
   <div class="drop">
@@ -218,6 +218,16 @@ button:disabled { opacity: .45; cursor: not-allowed; }
     <strong data-i18n="pickFolder">选择整个文件夹</strong>
     <p class="hint" data-i18n="folderHint">会递归读取选择文件夹中的 PDF</p>
     <input id="folder" type="file" accept=".pdf,application/pdf" webkitdirectory directory multiple>
+  </div>
+
+  <div class="drop">
+    <strong data-i18n="pickImageFolder">选择漫画图片文件夹</strong>
+    <p class="hint" data-i18n="imageFolderHint">递归读取 JPG、PNG、WebP 等图片，按文件夹和自然数字顺序排列</p>
+    <input id="imageFolder" type="file" accept="image/*" webkitdirectory directory multiple>
+  </div>
+  <div class="drop">
+    <strong data-i18n="pickImages">或选择多张漫画图片</strong>
+    <input id="imageFiles" type="file" accept="image/*" multiple>
   </div>
 
   <div class="row">
@@ -262,24 +272,13 @@ button:disabled { opacity: .45; cursor: not-allowed; }
     </div>
 
     <div class="field">
-      <label for="gamma" data-i18n="gammaLabel">Gamma</label>
-      <input id="gamma" type="range" min="0.50" max="2.00" step="0.05" value="1.00">
-      <span class="slider-value" id="gammaValue">1.00</span>
-    </div>
-
-    <div class="field">
-      <label for="maskMode" data-i18n="maskModeLabel">蒙版兼容模式（黑页 PDF）</label>
-      <input id="maskMode" type="checkbox">
-    </div>
-
-    <div class="field">
       <label for="strength" data-i18n="strengthLabel">抖动强度</label>
       <input id="strength" type="range" min="0" max="100" step="5" value="100">
       <span class="slider-value" id="strengthValue">100%</span>
     </div>
 
     <div class="field">
-      <label for="mergeCount" data-i18n="mergeLabel">每几个 PDF 合并成一本</label>
+      <label for="mergeCount" data-i18n="mergeLabel">每几个 PDF / 章节合并成一本</label>
       <select id="mergeCount">
         <option value="1">1（单独输出）</option>
         <option value="2" selected>2</option>
@@ -298,6 +297,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
         <option value="zip" data-i18n="zipMode">打包 ZIP</option>
         <option value="folder" data-i18n="folderMode">自动保存到文件夹（开始转换时选择）</option>
       </select>
+      <p class="hint" id="folderStatus">尚未选择保存文件夹。</p>
     </div>
 
     <div class="field">
@@ -325,7 +325,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 <section class="panel">
   <h2 data-i18n="previewTitle">前 5 个输出页面预览</h2>
   <p class="hint" data-i18n="previewHint">
-    显示首个 PDF 连续拼接后产生的前 5 个输出页面。页面之间不留额外间隔、不重叠。
+    显示队列首个 PDF 或图片章节连续拼接后产生的前 5 个输出页面。页面之间不留额外间隔、不重叠。
   </p>
 
   <div class="preview-controls">
@@ -361,30 +361,30 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   </ul>
 
   <div class="section-head">
-    <h2 data-i18n="queueTitle">源 PDF 队列</h2>
+    <h2 data-i18n="queueTitle">源文件队列</h2>
     <span class="hint" id="queueCount">0</span>
   </div>
 
   <p class="hint" data-i18n="queueHint">
-    可调整文件顺序，也可以删除不需要转换的文件。
+    可调整 PDF 和图片的顺序，也可以删除不需要转换的文件。
   </p>
 
   <ul class="queue" id="queue">
-    <li class="hint">请先选择 PDF 文件或文件夹。</li>
+    <li class="hint">请先选择 PDF 文件或漫画图片文件夹。</li>
   </ul>
 </section>
 
 <p class="footer">
-  X3 目标尺寸：528 × 792。PDF.js 与 JSZip 通过 CDN 加载。转换在浏览器本地进行。
+  X3 目标尺寸：528 × 792。PDF.js 与 JSZip 通过 CDN 加载。PDF 和图片均在浏览器本地处理。
   <br>
-  参考：
+  转换核心：test 原版拼接与图像处理逻辑。参考：
   <a href="https://github.com/varo6/xtcjs" target="_blank" rel="noreferrer">varo6/xtcjs</a>
 </p>
 
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script type="module" src="./app.js"></script>
+<script type="module" src="./app.js?v=2.0"></script>
 
 </body>
 </html>

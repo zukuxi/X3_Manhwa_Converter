@@ -1,40 +1,145 @@
-# X3 PDF → XTC / XTCH 连续拼接测试版
+# X3 PDF / Manga Image Folder to XTC / XTCH
 
-这是一个独立的 GitHub Pages 静态网页项目，用于测试 PDF 页面连续拼接后生成 XTC / XTCH 的效果。它不会修改其他仓库或工具。
+一个同时支持 **PDF 文件** 和 **漫画图片文件夹** 的 Xteink X3 转换器。转换核心以 `zukuxi/test` 为基础，PDF 与图片统一使用同一套 528 × 792 连续拼接、灰度处理、抖动和 XTC / XTCH 编码逻辑。
 
-https://zukuxi.github.io/test/
+## 功能
 
-## 转换方式
+- **PDF 输入：** 选择单个或多个 PDF，也可以选择包含 PDF 的文件夹。
+- **漫画图片输入：** 选择漫画总文件夹（内部可以按章节建立子文件夹），也可以直接多选 JPG、PNG、WebP、BMP、GIF、AVIF 图片。
+- **统一转换核心：** PDF 页面以 2 倍比例渲染；图片逐张按原始分辨率读取。两种输入最终都进入 `test` 原有的拼接器和图像处理流程。
+- **连续拼接：** 目标尺寸 528 × 792，按宽度等比例缩放，连续填充页面，重叠率 0%；每满 792 行输出一页，最后一页底部补白。
+- **批量合并：** PDF 可按每 1 / 2 / 3 / 4 / 5 / 10 / 20 个合并；图片文件夹按章节分组，可设置每 N 个章节输出一本。
+- **PDF 章节模式：** 可按文件名中的章节号，把标题相同且章节号连续的 PDF 合并。
+- **预览：** 查看队列首个 PDF 或图片章节生成的前 5 页。
+- **多种输出方式：**
+  - 单独下载：转换结果逐本显示，每本都可以单独下载。
+  - ZIP：将全部转换结果打包成一个 ZIP 下载。
+  - 文件夹：开始转换时选择电脑/设备上的目标文件夹，每本完成后立即保存。
+- **XTC / XTCH：** 黑白 XTC 或四级灰度 XTCH。
+- **图像设置：** Atkinson、Floyd–Steinberg、Stucki、无抖动；亮度、对比度、抖动强度和黑白阈值。
+- **队列管理：** 文件可以上移、下移或删除。
+- **本地处理：** PDF 和图片不会上传到转换服务器。
 
-- PDF.js 以 `scale: 2.0` 渲染每张 PDF 页面，保留现有的 2 倍渲染流程。
-- 每张页面按比例缩放到 528 像素宽，并按 PDF 页码顺序连续追加到同一条内容流中。
-- 输出页面尺寸为 528 × 792 像素；累计每 792 行生成一页，**重叠率为 0%**。
-- 不在原始 PDF 页面之间额外补白或居中；PDF 页面自身包含的白边会保留。
-- 最后一页如果不足 792 行，内容从页面顶部开始，剩余部分在底部补白。
-- 预览和正式转换共用同一套拼接逻辑。处理使用固定高度的临时画布，不会把整本漫画绘制到一张超长 canvas。
-- 支持多选 PDF、选择整个文件夹、按 N 个 PDF 合并、章节标题连续合并。
-- 支持 XTC（黑白）和 XTCH（4 灰阶）、Atkinson / Floyd–Steinberg / Stucki 抖动、亮度、对比度、阈值、抖动强度、前 5 页预览、中英文界面、单独下载、ZIP 下载及支持的浏览器中的文件夹保存。
-- PDF 在浏览器本地处理，不会上传到服务器。
+## 图片文件夹结构
 
+建议结构：
 
-## 测试建议
+```text
+漫画名/
+├── 第01话/
+│   ├── 001.jpg
+│   ├── 002.jpg
+│   └── 003.jpg
+├── 第02话/
+│   ├── 001.jpg
+│   └── 002.jpg
+└── 第03话/
+    ├── 001.jpg
+    └── 002.jpg
+```
 
-使用此前页面之间空白较多的 PDF，先检查预览是否连续，再分别测试 1-bit XTC 与 2-bit XTCH。重点观察：
+图片会按文件夹路径和自然数字顺序排列。图片文件夹的合并数量按章节计算：设为 1 时每章一本，设为 2 时每两章一本，依此类推。直接多选图片时，所选图片按文件名排序并作为一组连续内容处理。
 
-- 每张 PDF 页面的内容是否按顺序连续衔接；
-- 输出页边界是否出现细线或内容缺失；
-- 文字和“雪”等细笔画是否清晰；
-- 转换后的文件能否在 X3 正常打开；
-- 较长 PDF 在浏览器内存有限时是否能完成转换。
+## 统一转换流程
 
-## 注意
+### PDF
 
-此项目用于实验对照，不保证输出一定优于其他转换方式。它按整张 PDF 页面等比例缩放到 528 像素宽，再连续拼接；不会自动识别或裁剪漫画图内部的空白区域。如果 PDF 自带大块白边，那些白边仍会保留。页面依赖 PDF.js 和 JSZip 的 CDN，需要联网加载依赖。
+1. 使用 PDF.js 以 2 倍比例渲染每一页。
+2. 将渲染结果送入 `test` 原有的连续拼接器。
+3. 拼接器按 528 像素宽度等比例缩放，并连续填充 528 × 792 页面。
+4. 页面满 792 行时，执行原有灰度、抖动和 XTC / XTCH 编码。
+5. PDF 组最后不足一页的内容保留在页面顶部，底部补白。
 
+### 漫画图片
 
-## 本次整合
+1. 按文件夹路径及自然数字顺序逐张读取图片。
+2. 每次只创建当前图片的临时画布，不创建整章超长画布。
+3. 将图片送入与 PDF 完全相同的 `test` 连续拼接器。
+4. 后续灰度、抖动、页面打包及 XTC / XTCH 编码与 PDF 完全共用。
+5. 每个输出组结束时，将最后一页底部补白，并从新页面开始下一本。
 
-- 保留原版 `test` 的 PDF 2 倍渲染、528×792 连续拼接、0% 重叠、灰度处理、抖动算法和 XTC/XTCH 输出流程。
-- 新增 Gamma（默认 1.00；默认值不改变原版图像处理结果）。
-- 新增黑页 PDF 蒙版兼容模式（默认关闭）；开启后预览和正式转换均使用 PDF.js `print` 渲染意图。
-- 切换蒙版模式会重新渲染预览；调整 Gamma 会即时更新预览。
+因此，图片文件夹版不再使用另一套独立的缩放、灰度或分页算法，避免 PDF 与图片转换结果出现两套不同的处理效果。
+
+## 输出方式
+
+- **单独下载：** 转换完成后，在“转换结果”列表中逐本点击下载。
+- **打包 ZIP：** 选择 ZIP 模式，转换结束后自动生成 ZIP；也可以在转换完成后点击“下载全部结果 ZIP”。
+- **自动保存到文件夹：** 选择文件夹模式，点击开始转换时选择目标文件夹。每一本完成后立即写入目标文件夹，不必等全部转换完成后再统一保存。
+
+直接保存文件夹需要浏览器支持 File System Access API，建议使用支持该功能的 Chrome 或 Edge。若浏览器不支持，可使用单独下载或 ZIP。
+
+## 内存说明
+
+图片处理采用逐张读取、逐张释放临时画布的方式，不会把整个章节拼成一张超长画布。PDF 仍按原项目方式逐页渲染和清理。直接保存文件夹通常比 ZIP 更适合大量输出；ZIP 需要在打包阶段保留输出文件数据。实际内存使用仍取决于浏览器、图片尺寸、PDF 页数和输出数量。
+
+## 使用
+
+1. 将本仓库部署到 GitHub Pages。
+2. 选择 PDF 文件 / PDF 文件夹，或漫画图片文件夹 / 多张图片。
+3. 选择 XTC 或 XTCH。
+4. 设置每几个 PDF 或章节合并成一本。
+5. 调整抖动、亮度和对比度，查看前 5 页预览。
+6. 选择单独下载、ZIP 或自动保存到文件夹。
+7. 点击开始转换。
+
+## 许可证与致谢
+
+转换器的 PDF 渲染、连续拼接、灰度和 XTC / XTCH 编码核心保留自本项目 `test` 基础版本。原始 XTC 编码项目参考 [srokl/xtcjsapp](https://github.com/srokl/xtcjsapp) 及 [varo6/xtcjs](https://github.com/varo6/xtcjs)。请保留相关项目要求的版权和许可证声明。
+
+---
+
+# X3 PDF / Manga Image Folder to XTC / XTCH
+
+A browser-based converter for **PDF files** and **manga image folders** for the Xteink X3. Based on `zukuxi/test`, both input types share the same 528 × 792 continuous stitching, grayscale, dithering, and XTC / XTCH encoding pipeline.
+
+## Features
+
+- Select one or multiple PDFs, or recursively load PDFs from a folder.
+- Select a manga folder containing chapter subfolders, or select multiple image files directly.
+- PDFs are rendered at 2×. Images are read one at a time at their original resolution.
+- Both input types use the same original `test` stitcher and image-processing pipeline.
+- 528 × 792 output pages, continuous stitching, 0% overlap, and white padding on the final partial page.
+- Merge PDFs by a chosen number of files; merge image folders by a chosen number of chapters.
+- Optional PDF chapter grouping based on consecutive chapter numbers in filenames.
+- Preview the first five output pages.
+- Download each output separately, create one ZIP containing all outputs, or save each completed book directly to a selected folder.
+- XTC black-and-white and XTCH four-level grayscale output.
+- Atkinson, Floyd–Steinberg, Stucki, and no-dithering modes, plus brightness, contrast, strength, and threshold controls.
+- Local browser processing; source images and PDFs are not uploaded.
+
+## Folder layout
+
+```text
+Manga/
+├── Chapter 01/
+│   ├── 001.jpg
+│   └── 002.jpg
+├── Chapter 02/
+│   ├── 001.jpg
+│   └── 002.jpg
+└── Chapter 03/
+    ├── 001.jpg
+    └── 002.jpg
+```
+
+Images are sorted by folder path and natural filename order. For image folders, the merge count means chapters per output book. A value of 1 creates one book per chapter; 2 combines every two chapters. When selecting individual images, the selected images are sorted by filename and treated as one continuous sequence.
+
+## Shared conversion pipeline
+
+PDF pages are rendered at 2× and passed to the original `test` continuous stitcher. Manga images are loaded one at a time into temporary canvases and passed to that same stitcher. Both then use the same grayscale processing, dithering, page packing, and XTC / XTCH encoding. No separate image-folder conversion algorithm is used.
+
+## Output options
+
+- **Individual downloads:** Each completed book appears in the results list with its own download control.
+- **ZIP:** Automatically create one ZIP after conversion, or click the ZIP button to package all completed outputs.
+- **Save to folder:** Choose a destination folder when starting conversion. Each book is written as soon as it is completed.
+
+Direct folder saving requires browser support for the File System Access API. Chrome or Edge is recommended. If unsupported, use individual downloads or ZIP.
+
+## Memory
+
+Images are loaded and processed one at a time. The converter does not build a huge canvas for an entire chapter. PDF pages are rendered and cleaned up sequentially. Direct folder output is generally more suitable for large batches than ZIP, although actual memory use depends on the browser, source dimensions, PDF size, and output count.
+
+## License and acknowledgments
+
+The PDF rendering, continuous stitching, grayscale processing, and XTC / XTCH encoding core are retained from the `test` base project. The original XTC encoding projects include [srokl/xtcjsapp](https://github.com/srokl/xtcjsapp) and [varo6/xtcjs](https://github.com/varo6/xtcjs). Retain applicable copyright and license notices.

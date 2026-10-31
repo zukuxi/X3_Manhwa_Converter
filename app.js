@@ -32,9 +32,12 @@
 
   const dict = {
     zh: {
-      heading: 'X3 PDF → XTC / XTCH 连续拼接测试版',
-      lead: '独立测试项目：PDF 页面按宽度缩放后连续拼接，重叠率为 0%，每累计 792 像素输出一页；最后不足 792 像素的内容放在页面顶部，底部补白。文件只在本机浏览器处理。',
+      heading: 'X3 PDF / 漫画图片 → XTC / XTCH 转换器',
+      lead: 'PDF 和漫画图片统一使用 test 的 528×792 连续拼接算法；PDF 以 2 倍渲染，图片按原始分辨率逐张读取，连续拼接、不重叠，每累计 792 像素输出一页。文件只在本机浏览器处理。', 
       pickPdfs: '选择一个或多个 PDF',
+      pickImageFolder: '选择漫画图片文件夹',
+      imageFolderHint: '递归读取 JPG、PNG、WebP 等图片，按章节文件夹和自然数字顺序排列',
+      pickImages: '或选择多张漫画图片',
       pickFolder: '选择整个文件夹',
       folderHint: '会递归读取选择文件夹中的 PDF',
       depthLabel: '输出格式',
@@ -42,16 +45,14 @@
       thresholdLabel: '黑白阈值（无抖动时）',
       contrastLabel: '对比度',
       brightnessLabel: '亮度',
-      gammaLabel: 'Gamma',
-      maskModeLabel: '蒙版兼容模式（黑页 PDF）',
       strengthLabel: '抖动强度',
-      mergeLabel: '每几个 PDF 合并成一本',
+      mergeLabel: '每几个 PDF / 章节合并成一本',
       titleLabel: '自定义书名（可选）',
       chapterMode: '章节模式：将标题相同、章节号连续的 PDF 合并',
       chapterHint: '例如“[第1话] HEADON\'s Floor.pdf”和“[第2话] HEADON\'s Floor.pdf”会合并成“1-2 HEADON\'s Floor.xtch”。',
-      methodHint: '处理方式：PDF 页面按比例缩放到 528 像素宽后连续拼接；每 792 像素切成一页，不重叠。最后不足 792 像素的内容置顶，底部补白。预览和正式转换使用相同的拼接逻辑。',
+      methodHint: 'PDF 和图片均使用 test 的同一套拼接、灰度、抖动和 XTC/XTCH 编码逻辑。PDF 页面按 2 倍渲染；图片按原始分辨率逐张处理。',
       previewTitle: '前 5 个输出页面预览',
-      previewHint: '显示首个 PDF 连续拼接后产生的前 5 个输出页面。页面之间不留额外间隔、不重叠；调整参数可刷新当前页预览。',
+      previewHint: '显示队列首个 PDF 或图片章节连续拼接后产生的前 5 个输出页面。页面之间不留额外间隔、不重叠；调整参数可刷新当前页预览。',
       downloadModeLabel: '下载方式',
       individualMode: '单独下载',
       zipMode: '打包 ZIP',
@@ -64,22 +65,22 @@
       zipDownload: '下载全部结果 ZIP',
       clear: '清空队列',
       remove: '删除',
-      queueTitle: '源 PDF 队列',
-      queueHint: '可调整文件顺序，也可以删除不需要转换的文件。',
+      queueTitle: '源文件队列',
+      queueHint: '可调整 PDF 和图片的顺序，也可以删除不需要转换的文件。',
       languageLabel: '语言 / Language',
-      selectFirst: '请先选择 PDF 文件或文件夹。',
-      noPdf: '没有找到 PDF 文件。',
+      selectFirst: '请先选择 PDF 文件或漫画图片文件夹。',
+      noPdf: '没有找到支持的 PDF 或图片文件。',
       alreadyAdded: '文件已在队列中。',
       added: '已加入',
-      pdfUnit: '个 PDF。',
+      pdfUnit: '个文件。',
       waiting: '等待转换',
       converting: '转换中',
       done: '完成',
       failed: '失败',
-      removed: '已从队列删除该 PDF。',
+      removed: '已从队列删除该文件。',
       cleared: '队列已清空。',
       completedHint: '转换完成后显示结果。',
-      pdfRemoved: '已从队列删除该 PDF。',
+      pdfRemoved: '已从队列删除该文件。',
       noFolderSupport: '当前浏览器不支持直接保存到文件夹。请使用支持此功能的 Chrome/Edge，或改用单独下载/ZIP。',
       folderCancelled: '已取消选择保存文件夹。',
       folderReady: '保存文件夹已选择：',
@@ -96,7 +97,7 @@
       x3Page: 'X3 页面',
       previewFailed: '预览失败：',
       pdfjsFailed: 'PDF.js 加载失败。请检查网络/CDN 后刷新，具体原因请查看浏览器控制台。',
-      cancelRequested: '已请求取消，当前 PDF 页处理结束后停止。',
+      cancelRequested: '已请求取消，当前文件处理结束后停止。',
       cancelled: '已取消。成功',
       finished: '转换结束。成功',
       successUnit: '组，失败',
@@ -107,9 +108,12 @@
       saveFailed: '文件转换成功，但保存失败：'
     },
     en: {
-      heading: 'X3 PDF → XTC / XTCH — Continuous stitching test',
-      lead: 'Independent test project. PDF pages are scaled to 528 pixels wide and stitched continuously with 0% overlap. One output page is emitted for every 792 rows; the final partial page is top-aligned and padded white at the bottom. Files stay in your browser.',
+      heading: 'X3 PDF / Manga Images → XTC / XTCH Converter',
+      lead: 'PDFs and manga images use the same 528×792 continuous stitching algorithm from test. PDFs are rendered at 2×; images are read one at a time at their original resolution. No overlap is added. Files stay in your browser.', 
       pickPdfs: 'Select one or more PDFs',
+      pickImageFolder: 'Select a manga image folder',
+      imageFolderHint: 'Read JPG, PNG, WebP and other images recursively, sorted by chapter and natural filename order',
+      pickImages: 'Or select multiple manga images',
       pickFolder: 'Select a folder',
       folderHint: 'PDFs inside the selected folder are detected recursively',
       depthLabel: 'Output format',
@@ -117,14 +121,12 @@
       thresholdLabel: 'Threshold (when dithering is off)',
       contrastLabel: 'Contrast',
       brightnessLabel: 'Brightness',
-      gammaLabel: 'Gamma',
-      maskModeLabel: 'Mask compatibility mode (for black-page PDFs)',
       strengthLabel: 'Dithering strength',
-      mergeLabel: 'Merge every N PDFs into one book',
+      mergeLabel: 'Merge every N PDFs / chapters into one book',
       titleLabel: 'Custom book title (optional)',
       chapterMode: 'Chapter mode: merge consecutive chapters with matching titles',
       chapterHint: 'For example, “[Chapter 1] HEADON\'s Floor.pdf” and “[Chapter 2] HEADON\'s Floor.pdf” merge into “1-2 HEADON\'s Floor.xtch”.',
-      methodHint: 'Scale each PDF page proportionally to 528 pixels wide, then stitch pages continuously with 0% overlap. Emit one output page per 792 rows; top-align and white-pad the final partial page. Preview and conversion use the same stitching logic.',
+      methodHint: 'PDFs and images use the same stitching, grayscale, dithering and XTC/XTCH encoding logic from test. PDFs are rendered at 2×; images are processed one at a time at original resolution.',
       previewTitle: 'First 5 output pages preview',
       previewHint: 'Shows the first five output pages after continuously stitching the first PDF. No extra gaps or overlap are added between source pages. Adjust settings to refresh the preview.',
       downloadModeLabel: 'Download method',
@@ -139,22 +141,22 @@
       zipDownload: 'Download all results as ZIP',
       clear: 'Clear queue',
       remove: 'Remove',
-      queueTitle: 'Source PDF queue',
-      queueHint: 'Reorder files or remove PDFs you do not want to convert.',
+      queueTitle: 'Source file queue',
+      queueHint: 'Reorder PDFs and images or remove files you do not want to convert.',
       languageLabel: 'Language',
-      selectFirst: 'Select PDF files or a folder first.',
-      noPdf: 'No PDF files found.',
+      selectFirst: 'Select PDF files or a manga image folder first.',
+      noPdf: 'No supported PDF or image files found.',
       alreadyAdded: 'Files are already in the queue.',
       added: 'Added',
-      pdfUnit: 'PDF(s).',
+      pdfUnit: 'file(s).',
       waiting: 'Waiting',
       converting: 'Converting',
       done: 'Done',
       failed: 'Failed',
-      removed: 'PDF removed from the queue.',
+      removed: 'File removed from the queue.',
       cleared: 'Queue cleared.',
       completedHint: 'Completed files will appear here.',
-      pdfRemoved: 'PDF removed from the queue.',
+      pdfRemoved: 'File removed from the queue.',
       noFolderSupport: 'Direct folder saving is not supported in this browser. Use a compatible Chrome/Edge browser or download individually/ZIP.',
       folderCancelled: 'Folder selection cancelled.',
       folderReady: 'Destination folder selected: ',
@@ -171,7 +173,7 @@
       x3Page: 'X3 pages',
       previewFailed: 'Preview failed: ',
       pdfjsFailed: 'PDF.js could not load. Check your network/CDN and refresh. Details are in the browser console.',
-      cancelRequested: 'Cancellation requested; the current PDF page will finish first.',
+      cancelRequested: 'Cancellation requested; the current source page or image will finish first.',
       cancelled: 'Cancelled. Completed ',
       finished: 'Finished. Successful ',
       successUnit: ', failed ',
@@ -266,27 +268,24 @@
     return parts.slice(0, -1).map(safeName);
   }
 
-  function addFiles(files) {
-    const known = new Set(queue.map(item => fileKey(item.file)));
+  const imageExt = /\.(jpe?g|png|webp|bmp|gif|avif)$/i;
 
+  function addFiles(files, type = 'pdf') {
+    const known = new Set(queue.map(item => fileKey(item.file)));
     const arr = [...files]
-      .filter(file => /\.pdf$/i.test(file.name))
+      .filter(file => type === 'pdf'
+        ? /\.pdf$/i.test(file.name)
+        : imageExt.test(file.name) && (!file.type || file.type.startsWith('image/')))
       .sort((a, b) => collator.compare(
         a.webkitRelativePath || a.name,
         b.webkitRelativePath || b.name
       ));
 
     let added = 0;
-
     for (const file of arr) {
-      const key = fileKey(file) + '|mask:' + ($('maskMode').checked ? 'print' : 'display');
-
+      const key = fileKey(file);
       if (!known.has(key)) {
-        // Internal states are language-independent.
-        queue.push({
-          file,
-          state: 'waiting'
-        });
+        queue.push({ file, type, state: 'waiting' });
         known.add(key);
         added++;
       }
@@ -294,23 +293,30 @@
 
     if (added) {
       status(`${tr('added')} ${added} ${tr('pdfUnit')}`, 0);
+      previewKey = '';
       loadPreview();
     } else if (arr.length) {
       status(tr('alreadyAdded'), 0);
     } else {
       status(tr('noPdf'), 0);
     }
-
     renderQueue();
   }
 
   $('file').addEventListener('change', event => {
-    addFiles(event.target.files);
+    addFiles(event.target.files, 'pdf');
     event.target.value = '';
   });
-
   $('folder').addEventListener('change', event => {
-    addFiles(event.target.files);
+    addFiles(event.target.files, 'pdf');
+    event.target.value = '';
+  });
+  $('imageFolder').addEventListener('change', event => {
+    addFiles(event.target.files, 'image');
+    event.target.value = '';
+  });
+  $('imageFiles').addEventListener('change', event => {
+    addFiles(event.target.files, 'image');
     event.target.value = '';
   });
 
@@ -334,7 +340,7 @@
       const name = document.createElement('div');
       name.className = 'filename';
       name.textContent =
-        `${index + 1}. ${item.file.webkitRelativePath || item.file.name}`;
+        `${index + 1}. [${item.type === 'image' ? (lang === 'en' ? 'Image' : '图片') : 'PDF'}] ${item.file.webkitRelativePath || item.file.name}`;
 
       const detail = document.createElement('div');
       detail.className = 'file-detail';
@@ -389,8 +395,8 @@
         removeButton.className = 'secondary small';
         removeButton.textContent = tr('remove');
         removeButton.title = lang === 'en'
-          ? 'Remove this PDF from the queue'
-          : '从队列移除此 PDF';
+          ? 'Remove this file from the queue'
+          : '从队列移除此文件';
 
         removeButton.onclick = () => {
           if (running) return;
@@ -458,7 +464,7 @@
       const detail = document.createElement('div');
       detail.className = 'file-detail';
       detail.textContent =
-        `${output.pdfs} PDF · ${output.pages} X3 pages · ` +
+        `${output.files} ${output.type === 'image' ? (lang === 'en' ? 'images' : '张图片') : 'PDF'} · ${output.pages} X3 pages · ` +
         `${(output.blob.size / 1024 / 1024).toFixed(2)} MB`;
 
       info.append(name, detail);
@@ -488,7 +494,7 @@
   }
 
   function parseChapter(file) {
-    const stem = file.name.replace(/\.pdf$/i, '');
+    const stem = file.name.replace(/\.(pdf|jpe?g|png|webp|bmp|gif|avif)$/i, '');
     const match = stem.match(
       /(?:^|[\s\[【(（])(?:第\s*)?(\d+)\s*(?:话|話|章|回)\s*[\]】)）]?\s*[-_.、：:]?\s*(.*?)\s*$/i
     );
@@ -504,91 +510,102 @@
     };
   }
 
+  function imageChapterOf(file) {
+    const parts = (file.webkitRelativePath || file.name).split('/').filter(Boolean);
+    return parts.length >= 3 ? parts[1] : '图片';
+  }
+
   function groupsOf(items) {
-    if (!$('chapterMode').checked) {
-      const count = Math.max(1, Number($('mergeCount').value) || 1);
-      const result = [];
-
-      for (let index = 0; index < items.length; index += count) {
-        result.push(items.slice(index, index + count));
-      }
-
-      return result;
-    }
-
     const result = [];
+    let cursor = 0;
+    while (cursor < items.length) {
+      const type = items[cursor].type || 'pdf';
+      let end = cursor + 1;
+      while (end < items.length && (items[end].type || 'pdf') === type) end++;
+      const section = items.slice(cursor, end);
 
-    for (const item of items) {
-      const chapter = parseChapter(item.file);
-      const lastGroup = result.at(-1);
-      const previousItem = lastGroup?.at(-1);
-      const previousChapter = previousItem
-        ? parseChapter(previousItem.file)
-        : null;
-
-      if (
-        chapter &&
-        previousChapter &&
-        chapter.key === previousChapter.key &&
-        chapter.n === previousChapter.n + 1
-      ) {
-        lastGroup.push(item);
+      if (type === 'pdf') {
+        if (!$('chapterMode').checked) {
+          const count = Math.max(1, Number($('mergeCount').value) || 1);
+          for (let i = 0; i < section.length; i += count) result.push(section.slice(i, i + count));
+        } else {
+          const pdfGroups = [];
+          for (const item of section) {
+            const chapter = parseChapter(item.file);
+            const lastGroup = pdfGroups.at(-1);
+            const previous = lastGroup?.at(-1);
+            const previousChapter = previous ? parseChapter(previous.file) : null;
+            if (chapter && previousChapter && chapter.key === previousChapter.key &&
+                chapter.n === previousChapter.n + 1) lastGroup.push(item);
+            else pdfGroups.push([item]);
+          }
+          result.push(...pdfGroups);
+        }
       } else {
-        result.push([item]);
+        const chapters = [];
+        for (const item of section) {
+          const chapterName = imageChapterOf(item.file);
+          let last = chapters.at(-1);
+          if (!last || last.name !== chapterName) {
+            last = { name: chapterName, items: [] };
+            chapters.push(last);
+          }
+          last.items.push(item);
+        }
+        const count = Math.max(1, Number($('mergeCount').value) || 1);
+        for (let i = 0; i < chapters.length; i += count) {
+          result.push(chapters.slice(i, i + count).flatMap(ch => ch.items));
+        }
       }
+      cursor = end;
     }
-
     return result;
   }
 
   function outputName(group, index) {
     const customTitle = $('title').value.trim();
-    const chapters = group.map(item => parseChapter(item.file));
     const extension = Number($('depth').value) === 2 ? '.xtch' : '.xtc';
+    const isImages = group.every(item => item.type === 'image');
 
+    if (isImages) {
+      const chapters = [...new Set(group.map(item => imageChapterOf(item.file)))];
+      if (customTitle) {
+        const first = index * Math.max(1, Number($('mergeCount').value) || 1) + 1;
+        const last = first + chapters.length - 1;
+        return safeName(chapters.length === 1
+          ? `${customTitle}_${chapters[0]}`
+          : `${customTitle}_${first}-${last}`) + extension;
+      }
+      return safeName(chapters.length === 1
+        ? chapters[0]
+        : `${chapters[0]}-${chapters.at(-1)}`) + extension;
+    }
+
+    const chapters = group.map(item => parseChapter(item.file));
     if ($('chapterMode').checked && chapters.every(Boolean)) {
       const first = chapters[0].n;
       const last = chapters.at(-1).n;
       const title = chapters[0].title;
-
-      return safeName(
-        `${first === last ? first : `${first}-${last}`}${title ? ' ' + title : ''}`
-      ) + extension;
+      return safeName(`${first === last ? first : `${first}-${last}`}${title ? ' ' + title : ''}`) + extension;
     }
-
     if (customTitle) {
       const numbers = group.map(item => {
         const match = item.file.name.match(/(\d+)(?!.*\d)/);
         return match ? Number(match[1]) : null;
       });
-
       const first = numbers[0] ?? index * Number($('mergeCount').value) + 1;
       const last = numbers.at(-1) ?? first + group.length - 1;
-
-      return safeName(
-        group.length === 1
-          ? `${customTitle}${first}`
-          : `${customTitle}${first}-${last}`
-      ) + extension;
+      return safeName(group.length === 1 ? `${customTitle}${first}` : `${customTitle}${first}-${last}`) + extension;
     }
-
-    const stems = group.map(item =>
-      item.file.name.replace(/\.pdf$/i, '')
-    );
-
+    const stems = group.map(item => item.file.name.replace(/\.pdf$/i, ''));
     let name;
-
-    if (stems.length === 1) {
-      name = stems[0];
-    } else {
+    if (stems.length === 1) name = stems[0];
+    else {
       const matches = stems.map(stem => stem.match(/^(.*?)(\d+)$/));
-
-      name = matches.every(Boolean) &&
-        matches.every(match => match[1] === matches[0][1])
+      name = matches.every(Boolean) && matches.every(match => match[1] === matches[0][1])
         ? `${matches[0][1]}${matches[0][2]}-${matches.at(-1)[2]}`
         : `${stems[0]}_等${stems.length}个PDF`;
     }
-
     return safeName(name) + extension;
   }
 
@@ -650,18 +667,6 @@
       : 255;
   }
 
-  function applyGamma(array, gamma) {
-    if (!Number.isFinite(gamma) || gamma === 1) return;
-    const lut = new Uint8Array(256);
-    for (let i = 0; i < 256; i++) {
-      lut[i] = Math.max(0, Math.min(255,
-        Math.round(255 * Math.pow(i / 255, gamma))));
-    }
-    for (let i = 0; i < array.length; i++) {
-      array[i] = lut[Math.max(0, Math.min(255, Math.round(array[i])))];
-    }
-  }
-
   function processGray(
     gray,
     mode,
@@ -669,8 +674,7 @@
     threshold,
     contrast,
     brightness,
-    strength,
-    gamma
+    strength
   ) {
     const array = new Float32Array(gray.length);
 
@@ -678,7 +682,6 @@
       array[index] = clamp(gray[index] + brightness * 1.5);
     }
 
-    applyGamma(array, gamma);
     contrastPixels(array, contrast);
 
     if (mode === 'none' || strength === 0) {
@@ -1084,8 +1087,6 @@
       threshold: Number($('threshold').value),
       contrast: Number($('contrast').value),
       brightness: Number($('brightness').value),
-      gamma: Number($('gamma').value),
-      maskMode: $('maskMode').checked,
       strength: Number($('strength').value)
     };
   }
@@ -1099,8 +1100,7 @@
       current.threshold,
       current.contrast,
       current.brightness,
-      current.strength,
-      current.gamma
+      current.strength
     );
 
     const canvas = $('preview');
@@ -1158,6 +1158,46 @@
         return;
       }
 
+      const firstItem = queue[0];
+      const key = fileKey(file);
+
+      if (firstItem.type === 'image') {
+        const chapterName = imageChapterOf(file);
+        if (key !== previewKey || !previewPages.length) {
+          const newPages = [];
+          const stitcher = createStitcher();
+          const chapterItems = queue.filter(item =>
+            item.type === 'image' && imageChapterOf(item.file) === chapterName
+          );
+          for (const item of chapterItems) {
+            if (requestId !== previewRequestId) return;
+            if (newPages.length >= 5) break;
+            const canvas = await imageFileToCanvas(item.file);
+            try {
+              stitcher.appendCanvas(canvas, gray => newPages.push(gray), 5 - newPages.length);
+            } finally {
+              canvas.width = 1;
+              canvas.height = 1;
+            }
+            await new Promise(resolve => setTimeout(resolve, 0));
+          }
+          if (newPages.length < 5) stitcher.finish(gray => newPages.push(gray));
+          if (requestId !== previewRequestId) return;
+          if (previewPdf) {
+            await previewPdf.destroy();
+            previewPdf = null;
+          }
+          previewPages = newPages.slice(0, 5);
+          previewIndex = 0;
+          previewKey = key;
+        }
+        if (requestId !== previewRequestId) return;
+        if (previewPages.length) paintPreview(previewPages[previewIndex]);
+        else clearPreviewCanvas();
+        updatePageLabel();
+        return;
+      }
+
       if (!pdfjsLib) {
         throw Error(
           tr('pdfjsFailed') +
@@ -1167,7 +1207,6 @@
         );
       }
 
-      const key = fileKey(file);
 
       if (key !== previewKey || !previewPages.length) {
         const task = pdfjsLib.getDocument({
@@ -1208,8 +1247,7 @@
             await page.render({
               canvasContext: context,
               viewport,
-              background: 'rgb(255,255,255)',
-              intent: $('maskMode').checked ? 'print' : 'display'
+              background: 'rgb(255,255,255)'
             }).promise;
 
             if (requestId !== previewRequestId) {
@@ -1309,13 +1347,12 @@
 
   [
     'depth', 'dither', 'threshold',
-    'contrast', 'brightness', 'gamma', 'maskMode', 'strength'
+    'contrast', 'brightness', 'strength'
   ].forEach(id => {
     $(id).addEventListener('input', () => {
       for (const [inputId, outputId] of [
         ['threshold', 'thresholdValue'],
         ['brightness', 'brightnessValue'],
-        ['gamma', 'gammaValue'],
         ['strength', 'strengthValue']
       ]) {
         const output = $(outputId);
@@ -1327,149 +1364,151 @@
         }
       }
 
-      if (id === 'maskMode') {
-        loadPreview();
-        return;
-      }
-
       if (previewPages[previewIndex]) {
         paintPreview(previewPages[previewIndex]);
       }
     });
   });
 
-  async function convertGroup(group, groupIndex, total) {
-    if (!pdfjsLib) {
-      throw Error(
-        tr('pdfjsFailed') +
-        (pdfjsLoadError?.message
-          ? ' ' + pdfjsLoadError.message
-          : '')
-      );
+  async function imageFileToCanvas(file) {
+    const canvas = document.createElement('canvas');
+    let bitmap = null;
+    try {
+      if (window.createImageBitmap) {
+        bitmap = await createImageBitmap(file);
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        if (!context) throw Error('无法创建图片画布上下文。');
+        context.fillStyle = '#fff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(bitmap, 0, 0);
+      } else {
+        const url = URL.createObjectURL(file);
+        try {
+          const img = new Image();
+          img.src = url;
+          await img.decode();
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const context = canvas.getContext('2d', { willReadFrequently: true });
+          if (!context) throw Error('无法创建图片画布上下文。');
+          context.fillStyle = '#fff';
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(img, 0, 0);
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+      }
+      return canvas;
+    } finally {
+      bitmap?.close?.();
     }
+  }
 
+  async function convertGroup(group, groupIndex, total) {
     const current = settings();
     const pages = [];
     let pageTotal = 0;
-    // Keep one continuous buffer across all PDF pages in this output book.
+    const isImages = group.every(item => item.type === 'image');
     const stitcher = createStitcher();
 
     function addOutputGray(gray) {
       const processed = processGray(
-        gray,
-        current.mode,
-        current.depth,
-        current.threshold,
-        current.contrast,
-        current.brightness,
-        current.strength,
-        current.gamma
+        gray, current.mode, current.depth, current.threshold,
+        current.contrast, current.brightness, current.strength
       );
       pages.push(packPage(processed, current.depth));
       pageTotal++;
     }
 
-    function updateProgress(file, fileIndex, pageNumber, pdfPageCount) {
+    function updateProgress(file, fileIndex, pageNumber, pageCount, label) {
       status(
-        `${tr('convertingGroup')} ${groupIndex + 1}/${total} · ` +
-        `${file.name} · ` +
-        `${tr('pdfPage')} ${pageNumber}/${pdfPageCount} · ` +
-        `${tr('x3Page')} ${pageTotal}`,
-        (
-          (
-            groupIndex +
-            ((fileIndex + 1) / group.length) *
-            pageNumber / pdfPageCount
-          ) / total
-        ) * 100
+        `${tr('convertingGroup')} ${groupIndex + 1}/${total} · ${file.name} · ` +
+        `${label} ${pageNumber}/${pageCount} · ${tr('x3Page')} ${pageTotal}`,
+        ((groupIndex + (fileIndex + pageNumber / Math.max(1, pageCount)) / group.length) / total) * 100
       );
     }
 
     for (let fileIndex = 0; fileIndex < group.length; fileIndex++) {
       if (cancelled) throw Error('Cancelled');
-
       const item = group[fileIndex];
       item.state = 'converting';
       renderQueue();
 
-      const pdf = await pdfjsLib.getDocument({
-        data: await item.file.arrayBuffer()
-      }).promise;
+      if (item.type === 'image') {
+        const canvas = await imageFileToCanvas(item.file);
+        try {
+          stitcher.appendCanvas(canvas, gray => {
+            if (cancelled) throw Error('Cancelled');
+            addOutputGray(gray);
+            updateProgress(item.file, fileIndex, 1, 1, lang === 'en' ? 'Image' : '图片');
+          });
+        } finally {
+          canvas.width = 1;
+          canvas.height = 1;
+        }
+        item.state = 'done';
+        renderQueue();
+        updateProgress(item.file, fileIndex, 1, 1, lang === 'en' ? 'Image' : '图片');
+        await new Promise(resolve => setTimeout(resolve, 0));
+        continue;
+      }
 
+      if (!pdfjsLib) {
+        throw Error(tr('pdfjsFailed') + (pdfjsLoadError?.message ? ' ' + pdfjsLoadError.message : ''));
+      }
+      const pdf = await pdfjsLib.getDocument({ data: await item.file.arrayBuffer() }).promise;
       try {
         for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
           if (cancelled) throw Error('Cancelled');
-
           const page = await pdf.getPage(pageNumber);
           const viewport = page.getViewport({ scale: 2 });
           const canvas = document.createElement('canvas');
           canvas.width = Math.ceil(viewport.width);
           canvas.height = Math.ceil(viewport.height);
-
-          const context = canvas.getContext('2d', {
-            willReadFrequently: true
-          });
-
-          if (!context) {
-            throw Error('无法创建转换画布上下文。');
-          }
-
+          const context = canvas.getContext('2d', { willReadFrequently: true });
+          if (!context) throw Error('无法创建转换画布上下文。');
           context.fillStyle = '#fff';
           context.fillRect(0, 0, canvas.width, canvas.height);
-
           await page.render({
             canvasContext: context,
             viewport,
-            background: 'rgb(255,255,255)',
-            intent: current.maskMode ? 'print' : 'display'
+            background: 'rgb(255,255,255)'
           }).promise;
-
           stitcher.appendCanvas(canvas, gray => {
             if (cancelled) throw Error('Cancelled');
             addOutputGray(gray);
-            updateProgress(item.file, fileIndex, pageNumber, pdf.numPages);
+            updateProgress(item.file, fileIndex, pageNumber, pdf.numPages, tr('pdfPage'));
           });
-
           page.cleanup?.();
           canvas.width = 1;
           canvas.height = 1;
-
-          // Update progress even when this source page did not complete an X3 page.
-          updateProgress(item.file, fileIndex, pageNumber, pdf.numPages);
+          updateProgress(item.file, fileIndex, pageNumber, pdf.numPages, tr('pdfPage'));
           await new Promise(resolve => setTimeout(resolve, 0));
         }
       } finally {
         await pdf.destroy();
       }
-
       item.state = 'done';
       renderQueue();
     }
 
-    // Emit the final incomplete page only once, with white padding at the bottom.
     stitcher.finish(gray => addOutputGray(gray));
-
     const name = outputName(group, groupIndex);
-    const data = buildBook(
-      pages,
-      current.depth === 2,
-      name.replace(/\.(xtc|xtch)$/i, '')
-    );
-
+    const data = buildBook(pages, current.depth === 2, name.replace(/\.(xtc|xtch)$/i, ''));
     status(
-      `${tr('convertingGroup')} ${groupIndex + 1}/${total} · ` +
-      `${tr('x3Page')} ${pageTotal}`,
+      `${tr('convertingGroup')} ${groupIndex + 1}/${total} · ${tr('x3Page')} ${pageTotal}`,
       ((groupIndex + 1) / total) * 100
     );
 
     return {
       name,
-      blob: new Blob([data], {
-        type: 'application/octet-stream'
-      }),
-      pdfs: group.length,
+      blob: new Blob([data], { type: 'application/octet-stream' }),
+      files: group.length,
+      type: isImages ? 'image' : 'pdf',
       pages: pageTotal,
-      folderPath: sourceFolderPath(group)
+      folderPath: isImages ? [] : sourceFolderPath(group)
     };
   }
 
@@ -1653,7 +1692,10 @@
       return;
     }
 
-    if (!pdfjsLib) {
+    const pendingItems = queue.filter(item =>
+      item.state === 'waiting' || item.state === 'failed'
+    );
+    if (!pdfjsLib && pendingItems.some(item => item.type !== 'image')) {
       status(
         tr('pdfjsFailed') +
         (pdfjsLoadError?.message ? ' ' + pdfjsLoadError.message : ''),
