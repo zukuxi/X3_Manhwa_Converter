@@ -41,7 +41,7 @@
       titleLabel: '漫画名（可修改）',
       includeCover: '如果根目录有 Cover.jpg，在整部合并模式下作为第一页',
       generationTitle: '② 生成方式',
-      outputModeLabel: '生成方式（图片章节）',
+      outputModeLabel: '图片章节生成方式',
       modeChapter: '每章单独一本',
       modeMerge: '整部合并成一本',
       modeRange: '指定章节范围合并',
@@ -49,7 +49,7 @@
       fromChapterLabel: '从章节',
       toChapterLabel: '到章节',
       chaptersPerBookLabel: '每本包含章节数',
-      pdfMergeLabel: 'PDF 每几份合并成一本',
+      pdfMergeLabel: 'PDF 合并数量',
       settingsTitle: '③ 转换设置',
       maskModeShort: '启用（仅 PDF）',
       depthLabel: '输出格式',
@@ -61,7 +61,9 @@
       strengthLabel: '抖动强度',
       chapterMode: 'PDF 章节模式：将标题相同、章节号连续的文件合并',
       previewTitle: '前 5 页预览',
-      previewHint: '显示队列首个 PDF 或图片章节转换后的前 5 页。',
+      previewSourceLabel: '预览内容',
+      previewFirstItem: '队列首个文件',
+      previewHint: '可预览队列首个文件，也可以切换到任意图片章节查看前 5 页。',
       downloadModeLabel: '下载方式',
       individualMode: '单独下载',
       zipMode: '打包 ZIP',
@@ -99,7 +101,7 @@
       titleLabel: 'Webtoon title (editable)',
       includeCover: 'Use root Cover.jpg as the first page in whole-book mode',
       generationTitle: '② Generation mode',
-      outputModeLabel: 'Generation mode (image chapters)',
+      outputModeLabel: 'Image chapter output',
       modeChapter: 'One book per chapter',
       modeMerge: 'Merge the whole series into one book',
       modeRange: 'Merge a chapter range',
@@ -107,7 +109,7 @@
       fromChapterLabel: 'From chapter',
       toChapterLabel: 'To chapter',
       chaptersPerBookLabel: 'Chapters per book',
-      pdfMergeLabel: 'Merge every N PDFs',
+      pdfMergeLabel: 'PDF merge count',
       settingsTitle: '③ Conversion settings',
       maskModeShort: 'Enable (PDF only)',
       depthLabel: 'Output format',
@@ -123,7 +125,9 @@
       chapterHint: 'For example, “[Chapter 1] HEADON\'s Floor.pdf” and “[Chapter 2] HEADON\'s Floor.pdf” merge into “1-2 HEADON\'s Floor.xtch”.',
       methodHint: 'PDFs and images use the same stitching, grayscale, dithering and XTC/XTCH encoding logic from test. PDFs are rendered at 2×; images are processed one at a time at original resolution.',
       previewTitle: 'First 5 output pages preview',
-      previewHint: 'Shows the first five output pages after continuously stitching the first PDF. No extra gaps or overlap are added between source pages. Adjust settings to refresh the preview.',
+      previewSourceLabel: 'Preview source',
+      previewFirstItem: 'First item in queue',
+      previewHint: 'Preview the first queued file or switch to any image chapter to view its first five output pages.',
       downloadModeLabel: 'Download method',
       individualMode: 'Download individually',
       zipMode: 'Create a ZIP',
@@ -223,6 +227,7 @@
     updateFolderStatus();
     renderQueue();
     renderOutputs();
+    updatePreviewSources();
     updatePageLabel();
 
     // Do not replace an active progress message just because the language changed.
@@ -425,6 +430,7 @@
           }
 
           renderQueue();
+          updateGenerationFields();
           loadPreview();
           status(tr('removed'), 0);
         };
@@ -524,15 +530,59 @@
   }
 
   function imageChapterOf(file) {
-    const parts = (file.webkitRelativePath || file.name).split('/').filter(Boolean);
-    return parts.length >= 3 ? parts[1]
-      : (parts.length === 2 && !/^cover\.(jpe?g|png|webp|bmp|gif|avif)$/i.test(parts[1]) ? parts[0] : '未分章图片');
+    const relative = file.webkitRelativePath || '';
+    if (!relative) return '未分章图片';
+    const parts = relative.split('/').filter(Boolean);
+    if (parts.length < 3) return '未分章图片';
+
+    // Ignore the selected root folder. Prefer the deepest folder whose name
+    // looks like a chapter (e.g. 第01话, 12, Chapter 3), including nested
+    // layouts such as 漫画/第1卷/第01话/001.jpg.
+    const folders = parts.slice(1, -1);
+    const chapterPattern = /^(?:(?:第\s*)?\d+\s*(?:话|話|章|回|集|卷|册|部)|(?:chapter|ch)\s*[-_ ]*\d+|\d+)$/i;
+    for (let i = folders.length - 1; i >= 0; i--) {
+      if (chapterPattern.test(folders[i].trim())) return folders[i];
+    }
+    return folders.at(-1) || '未分章图片';
+  }
+
+  function updatePreviewSources() {
+    const select = $('previewSource');
+    if (!select) return;
+    const oldValue = select.value;
+    select.replaceChildren();
+    const firstOption = document.createElement('option');
+    firstOption.value = '';
+    firstOption.textContent = tr('previewFirstItem');
+    select.append(firstOption);
+
+    const seen = new Set();
+    for (const item of queue) {
+      if (item.type !== 'image' || isRootCover(item.file)) continue;
+      const chapter = imageChapterOf(item.file);
+      if (seen.has(chapter)) continue;
+      seen.add(chapter);
+      const firstInChapter = queue.find(candidate => candidate.type === 'image' && !isRootCover(candidate.file) && imageChapterOf(candidate.file) === chapter);
+      const option = document.createElement('option');
+      option.value = firstInChapter ? fileKey(firstInChapter.file) : '';
+      option.textContent = `${lang === 'en' ? 'Image chapter: ' : '图片章节：'}${chapter}`;
+      select.append(option);
+    }
+    select.style.display = seen.size ? 'block' : 'none';
+    if ([...select.options].some(option => option.value === oldValue)) select.value = oldValue;
+    else select.value = '';
   }
 
   function updateGenerationFields() {
     const mode = $('outputMode').value;
-    $('rangeFields').style.display = mode === 'range' ? 'flex' : 'none';
-    $('batchFields').style.display = mode === 'batch' ? 'flex' : 'none';
+    const hasImages = queue.some(item => item.type === 'image' && !isRootCover(item.file));
+    const hasPdfs = queue.some(item => item.type === 'pdf');
+    $('imageModeField').style.display = hasImages ? '' : 'none';
+    $('pdfMergeField').style.display = hasPdfs && !$('chapterMode').checked ? '' : 'none';
+    $('pdfChapterModeField').style.display = hasPdfs ? '' : 'none';
+    $('rangeFields').style.display = hasImages && mode === 'range' ? 'flex' : 'none';
+    $('batchFields').style.display = hasImages && mode === 'batch' ? 'flex' : 'none';
+    updatePreviewSources();
 
     const imageItems = queue.filter(item => item.type === 'image' && !isRootCover(item.file));
     const chapters = [];
@@ -1219,7 +1269,12 @@
     const requestId = ++previewRequestId;
 
     try {
-      const file = queue[0]?.file;
+      const selectedPreviewKey = $('previewSource')?.value || '';
+      const selectedPreviewItem = selectedPreviewKey
+        ? queue.find(item => fileKey(item.file) === selectedPreviewKey)
+        : null;
+      const firstItem = selectedPreviewItem || queue[0] || null;
+      const file = firstItem?.file;
 
       if (!file) {
         previewKey = '';
@@ -1236,7 +1291,6 @@
         return;
       }
 
-      const firstItem = queue[0];
       const key = fileKey(file);
 
       if (firstItem.type === 'image') {
@@ -1401,7 +1455,14 @@
     }
   }
 
-  ['outputMode', 'chaptersPerBook', 'fromChapter', 'toChapter', 'includeCover'].forEach(id => {
+  $('previewSource').addEventListener('change', () => {
+    previewKey = '';
+    previewPages = [];
+    previewIndex = 0;
+    loadPreview();
+  });
+
+  ['outputMode', 'chaptersPerBook', 'fromChapter', 'toChapter', 'includeCover', 'chapterMode'].forEach(id => {
     $(id).addEventListener('change', () => {
       updateGenerationFields();
       previewKey = '';
@@ -1459,35 +1520,59 @@
 
   async function imageFileToCanvas(file) {
     const canvas = document.createElement('canvas');
+    const contextOptions = { willReadFrequently: true };
     let bitmap = null;
+
     try {
       if (window.createImageBitmap) {
-        bitmap = await createImageBitmap(file);
-        canvas.width = bitmap.width;
-        canvas.height = bitmap.height;
-        const context = canvas.getContext('2d', { willReadFrequently: true });
+        try {
+          bitmap = await createImageBitmap(file);
+          if (bitmap.width && bitmap.height) {
+            canvas.width = bitmap.width;
+            canvas.height = bitmap.height;
+            const context = canvas.getContext('2d', contextOptions);
+            if (!context) throw Error('无法创建图片画布上下文。');
+            context.fillStyle = '#fff';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(bitmap, 0, 0);
+            return canvas;
+          }
+        } catch (bitmapError) {
+          console.warn('createImageBitmap failed; falling back to HTMLImageElement:', file.name, bitmapError);
+        } finally {
+          bitmap?.close?.();
+          bitmap = null;
+        }
+      }
+
+      const url = URL.createObjectURL(file);
+      try {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = url;
+        if (img.decode) await img.decode();
+        else await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = () => reject(Error('图片解码失败：' + file.name));
+        });
+        const width = img.naturalWidth || img.width;
+        const height = img.naturalHeight || img.height;
+        if (!width || !height) throw Error('图片尺寸无效：' + file.name);
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext('2d', contextOptions);
         if (!context) throw Error('无法创建图片画布上下文。');
         context.fillStyle = '#fff';
         context.fillRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(bitmap, 0, 0);
-      } else {
-        const url = URL.createObjectURL(file);
-        try {
-          const img = new Image();
-          img.src = url;
-          await img.decode();
-          canvas.width = img.naturalWidth;
-          canvas.height = img.naturalHeight;
-          const context = canvas.getContext('2d', { willReadFrequently: true });
-          if (!context) throw Error('无法创建图片画布上下文。');
-          context.fillStyle = '#fff';
-          context.fillRect(0, 0, canvas.width, canvas.height);
-          context.drawImage(img, 0, 0);
-        } finally {
-          URL.revokeObjectURL(url);
-        }
+        context.drawImage(img, 0, 0);
+      } finally {
+        URL.revokeObjectURL(url);
       }
       return canvas;
+    } catch (error) {
+      canvas.width = 1;
+      canvas.height = 1;
+      throw error;
     } finally {
       bitmap?.close?.();
     }
@@ -1933,6 +2018,7 @@
 
     renderQueue();
     renderOutputs();
+    updateGenerationFields();
 
     $('bar').style.width = '0';
     status(tr('cleared'), 0);
@@ -1953,6 +2039,7 @@
   // Initialise labels and controls.
   renderQueue();
   renderOutputs();
+  updateGenerationFields();
   applyLang();
   updatePageLabel();
 
