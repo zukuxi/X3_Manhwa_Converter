@@ -32,27 +32,36 @@
 
   const dict = {
     zh: {
-      heading: 'X3 PDF / 漫画图片 → XTC / XTCH 转换器',
-      lead: 'PDF 和漫画图片统一使用 test 的 528×792 连续拼接算法；PDF 以 2 倍渲染，图片按原始分辨率逐张读取，连续拼接、不重叠，每累计 792 像素输出一页。文件只在本机浏览器处理。', 
+      heading: 'X3 条漫转换器',
+      lead: '将条漫 PDF 或图片文件夹转换为 X3 使用的 XTC / XTCH 文件。所有处理均在本机浏览器完成。',
+      chooseComic: '① 选择条漫',
+      pickerHint: '可以选择单个或多个 PDF / 图片文件，也可以选择包含章节文件夹的漫画总文件夹。',
       pickFiles: '选择单个或多个文件',
-      filesHint: '可选择 PDF 或 JPG、PNG、WebP 等漫画图片；支持一次选择多种文件。',
       pickFolder: '选择整个文件夹',
-      folderHint: '递归读取文件夹中的 PDF 和 JPG、PNG、WebP 等漫画图片，按文件夹和自然数字顺序排列。',
+      titleLabel: '漫画名（可修改）',
+      includeCover: '如果根目录有 Cover.jpg，在整部合并模式下作为第一页',
+      generationTitle: '② 生成方式',
+      outputModeLabel: '生成方式（图片章节）',
+      modeChapter: '每章单独一本',
+      modeMerge: '整部合并成一本',
+      modeRange: '指定章节范围合并',
+      modeBatch: '每 N 章合并成一本',
+      fromChapterLabel: '从章节',
+      toChapterLabel: '到章节',
+      chaptersPerBookLabel: '每本包含章节数',
+      pdfMergeLabel: 'PDF 每几份合并成一本',
+      settingsTitle: '③ 转换设置',
+      maskModeShort: '启用（仅 PDF）',
       depthLabel: '输出格式',
       ditherLabel: '抖动算法',
       thresholdLabel: '黑白阈值（无抖动时）',
       contrastLabel: '对比度',
       brightnessLabel: '亮度',
-      maskModeLabel: '蒙版兼容模式（黑页 PDF）',
-      maskModeHint: '仅对 PDF 生效；开启后使用 PDF.js 打印渲染模式，尝试修复黑页或蒙版异常。默认关闭。',
+      maskModeLabel: '蒙版兼容模式',
       strengthLabel: '抖动强度',
-      mergeLabel: '每几个 PDF / 章节合并成一本',
-      titleLabel: '自定义书名（可选）',
-      chapterMode: '章节模式：将标题相同、章节号连续的 PDF 合并',
-      chapterHint: '例如“[第1话] HEADON\'s Floor.pdf”和“[第2话] HEADON\'s Floor.pdf”会合并成“1-2 HEADON\'s Floor.xtch”。',
-      methodHint: 'PDF 和图片均使用 test 的同一套拼接、灰度、抖动和 XTC/XTCH 编码逻辑。PDF 页面按 2 倍渲染；图片按原始分辨率逐张处理。',
-      previewTitle: '前 5 个输出页面预览',
-      previewHint: '显示队列首个 PDF 或图片章节连续拼接后产生的前 5 个输出页面。页面之间不留额外间隔、不重叠；调整参数可刷新当前页预览。',
+      chapterMode: 'PDF 章节模式：将标题相同、章节号连续的文件合并',
+      previewTitle: '前 5 页预览',
+      previewHint: '显示队列首个 PDF 或图片章节转换后的前 5 页。',
       downloadModeLabel: '下载方式',
       individualMode: '单独下载',
       zipMode: '打包 ZIP',
@@ -60,60 +69,47 @@
       folderNotChosen: '尚未选择保存文件夹。',
       folderChosen: '已选择保存文件夹：',
       outputsTitle: '转换结果',
-      start: '开始转换',
-      cancel: '取消',
-      zipDownload: '下载全部结果 ZIP',
-      clear: '清空队列',
-      remove: '删除',
-      queueTitle: '源文件队列',
-      queueHint: '可调整 PDF 和图片的顺序，也可以删除不需要转换的文件。',
+      start: '开始转换', cancel: '取消', zipDownload: '下载全部结果 ZIP', clear: '清空队列',
+      remove: '删除', queueTitle: '源文件队列', queueHint: '可调整文件顺序，也可以删除不需要转换的文件。',
       languageLabel: '语言 / Language',
-      selectFirst: '请先选择文件或整个文件夹。',
-      noPdf: '没有找到支持的 PDF 或图片文件。',
-      alreadyAdded: '文件已在队列中。',
-      added: '已加入',
-      pdfUnit: '个文件。',
-      waiting: '等待转换',
-      converting: '转换中',
-      done: '完成',
-      failed: '失败',
-      removed: '已从队列删除该文件。',
-      cleared: '队列已清空。',
-      completedHint: '转换完成后显示结果。',
+      selectFirst: '尚未选择条漫。', noPdf: '没有找到支持的 PDF 或图片文件。',
+      alreadyAdded: '文件已在队列中。', added: '已加入', pdfUnit: '个文件。',
+      waiting: '等待转换', converting: '转换中', done: '完成', failed: '失败',
+      removed: '已从队列删除该文件。', cleared: '队列已清空。', completedHint: '转换完成后显示结果。',
       pdfRemoved: '已从队列删除该文件。',
       noFolderSupport: '当前浏览器不支持直接保存到文件夹。请使用支持此功能的 Chrome/Edge，或改用单独下载/ZIP。',
-      folderCancelled: '已取消选择保存文件夹。',
-      folderReady: '保存文件夹已选择：',
-      needFolder: '请先选择保存文件夹，再开始转换。',
-      folderSaveFailed: '保存到文件夹失败：',
-      folderSaved: '已保存：',
-      saving: '正在保存文件：',
-      zipBuilding: '正在打包 ZIP…',
-      zipReady: 'ZIP 打包完成：',
-      zipUnit: '个文件。',
-      convertingGroup: '第',
-      group: '组',
-      pdfPage: 'PDF 页',
-      x3Page: 'X3 页面',
-      previewFailed: '预览失败：',
+      folderCancelled: '已取消选择保存文件夹。', folderReady: '保存文件夹已选择：',
+      needFolder: '请先选择保存文件夹，再开始转换。', folderSaveFailed: '保存到文件夹失败：',
+      folderSaved: '已保存：', saving: '正在保存文件：', zipBuilding: '正在打包 ZIP…',
+      zipReady: 'ZIP 打包完成：', zipUnit: '个文件。', convertingGroup: '第', group: '组',
+      pdfPage: 'PDF 页', x3Page: 'X3 页面', previewFailed: '预览失败：',
       pdfjsFailed: 'PDF.js 加载失败。请检查网络/CDN 后刷新，具体原因请查看浏览器控制台。',
-      cancelRequested: '已请求取消，当前文件处理结束后停止。',
-      cancelled: '已取消。成功',
-      finished: '转换结束。成功',
-      successUnit: '组，失败',
-      groupUnit: '组。',
-      conversionFailed: '转换失败：',
-      browserFolderPermission: '浏览器没有获得保存文件夹的写入权限，请重新选择文件夹并允许访问。',
-      autoZipFailed: 'ZIP 生成失败：',
-      saveFailed: '文件转换成功，但保存失败：'
+      cancelRequested: '已请求取消，当前文件处理结束后停止。', cancelled: '已取消。成功',
+      finished: '转换结束。成功', successUnit: '组，失败', groupUnit: '组。',
+      conversionFailed: '转换失败：', browserFolderPermission: '浏览器没有获得保存文件夹的写入权限，请重新选择文件夹并允许访问。',
+      autoZipFailed: 'ZIP 生成失败：', saveFailed: '文件转换成功，但保存失败：'
     },
     en: {
-      heading: 'X3 PDF / Manga Images → XTC / XTCH Converter',
-      lead: 'PDFs and manga images use the same 528×792 continuous stitching algorithm from test. PDFs are rendered at 2×; images are read one at a time at their original resolution. No overlap is added. Files stay in your browser.', 
+      heading: 'X3 Webtoon Converter',
+      lead: 'Convert webtoon PDFs or image folders to XTC / XTCH files for Xteink X3. All processing stays in your browser.',
+      chooseComic: '① Select webtoon',
+      pickerHint: 'Select one or more PDF / image files, or choose the whole folder containing chapter folders.',
       pickFiles: 'Select one or more files',
-      filesHint: 'Choose PDFs or manga images such as JPG, PNG and WebP. You can select different file types together.',
       pickFolder: 'Select an entire folder',
-      folderHint: 'Recursively reads PDFs and manga images such as JPG, PNG and WebP, sorted by folder and natural filename order.',
+      titleLabel: 'Webtoon title (editable)',
+      includeCover: 'Use root Cover.jpg as the first page in whole-book mode',
+      generationTitle: '② Generation mode',
+      outputModeLabel: 'Generation mode (image chapters)',
+      modeChapter: 'One book per chapter',
+      modeMerge: 'Merge the whole series into one book',
+      modeRange: 'Merge a chapter range',
+      modeBatch: 'Merge every N chapters',
+      fromChapterLabel: 'From chapter',
+      toChapterLabel: 'To chapter',
+      chaptersPerBookLabel: 'Chapters per book',
+      pdfMergeLabel: 'Merge every N PDFs',
+      settingsTitle: '③ Conversion settings',
+      maskModeShort: 'Enable (PDF only)',
       depthLabel: 'Output format',
       ditherLabel: 'Dithering algorithm',
       thresholdLabel: 'Threshold (when dithering is off)',
@@ -122,9 +118,8 @@
       maskModeLabel: 'Mask compatibility mode (black-page PDFs)',
       maskModeHint: 'PDF only. Uses PDF.js print rendering to work around black pages or mask-rendering issues. Off by default.',
       strengthLabel: 'Dithering strength',
-      mergeLabel: 'Merge every N PDFs / chapters into one book',
-      titleLabel: 'Custom book title (optional)',
-      chapterMode: 'Chapter mode: merge consecutive chapters with matching titles',
+      mergeLabel: 'Merge every N PDFs into one book',
+      chapterMode: 'PDF chapter mode: merge consecutive files with matching titles',
       chapterHint: 'For example, “[Chapter 1] HEADON\'s Floor.pdf” and “[Chapter 2] HEADON\'s Floor.pdf” merge into “1-2 HEADON\'s Floor.xtch”.',
       methodHint: 'PDFs and images use the same stitching, grayscale, dithering and XTC/XTCH encoding logic from test. PDFs are rendered at 2×; images are processed one at a time at original resolution.',
       previewTitle: 'First 5 output pages preview',
@@ -142,7 +137,7 @@
       clear: 'Clear queue',
       remove: 'Remove',
       queueTitle: 'Source file queue',
-      queueHint: 'Reorder PDFs and images or remove files you do not want to convert.',
+      queueHint: 'Reorder files or remove items you do not want to convert.',
       languageLabel: 'Language',
       selectFirst: 'Select files or an entire folder first.',
       noPdf: 'No supported PDF or image files found.',
@@ -298,6 +293,12 @@
 
     if (added) {
       status(`${tr('added')} ${added} ${tr('pdfUnit')}`, 0);
+      const imageCount = arr.filter(item => item.type === 'image').length;
+      const pdfCount = arr.filter(item => item.type === 'pdf').length;
+      const chapterCount = new Set(queue.filter(item => item.type === 'image' && !isRootCover(item.file)).map(item => imageChapterOf(item.file))).size;
+      $('fileStatus').textContent = lang === 'en'
+        ? `Loaded ${queue.length} files (${queue.filter(item => item.type === 'pdf').length} PDFs, ${queue.filter(item => item.type === 'image').length} images), with ${chapterCount} image chapters detected.`
+        : `已读取 ${queue.length} 个文件（PDF ${queue.filter(item => item.type === 'pdf').length} 个，图片 ${queue.filter(item => item.type === 'image').length} 张），识别到 ${chapterCount} 个图片章节。`;
       previewKey = '';
       loadPreview();
     } else if (arr.length) {
@@ -306,8 +307,17 @@
       status(tr('noPdf'), 0);
     }
     renderQueue();
+    updateGenerationFields();
+    if (added && !$('title').value.trim()) {
+      const first = arr[0]?.file;
+      const relative = first?.webkitRelativePath || '';
+      const parts = relative.split('/').filter(Boolean);
+      $('title').value = parts.length > 1 ? parts[0] : (first?.name || '').replace(/\.[^.]+$/, '');
+    }
   }
 
+  $('pickFiles').addEventListener('click', () => $('file').click());
+  $('pickFolder').addEventListener('click', () => $('folder').click());
   $('file').addEventListener('change', event => {
     addFiles(event.target.files);
     event.target.value = '';
@@ -315,6 +325,7 @@
   $('folder').addEventListener('change', event => {
     addFiles(event.target.files);
     event.target.value = '';
+    updateGenerationFields();
   });
 
   function renderQueue() {
@@ -507,9 +518,44 @@
     };
   }
 
+  function isRootCover(file) {
+    const parts = (file.webkitRelativePath || '').split('/').filter(Boolean);
+    return parts.length === 2 && /^cover\.(jpe?g|png|webp|bmp|gif|avif)$/i.test(parts[1]);
+  }
+
   function imageChapterOf(file) {
     const parts = (file.webkitRelativePath || file.name).split('/').filter(Boolean);
-    return parts.length >= 3 ? parts[1] : '图片';
+    return parts.length >= 3 ? parts[1]
+      : (parts.length === 2 && !/^cover\.(jpe?g|png|webp|bmp|gif|avif)$/i.test(parts[1]) ? parts[0] : '未分章图片');
+  }
+
+  function updateGenerationFields() {
+    const mode = $('outputMode').value;
+    $('rangeFields').style.display = mode === 'range' ? 'flex' : 'none';
+    $('batchFields').style.display = mode === 'batch' ? 'flex' : 'none';
+
+    const imageItems = queue.filter(item => item.type === 'image' && !isRootCover(item.file));
+    const chapters = [];
+    for (const item of imageItems) {
+      const name = imageChapterOf(item.file);
+      if (!chapters.includes(name)) chapters.push(name);
+    }
+    for (const id of ['fromChapter', 'toChapter']) {
+      const select = $(id);
+      const oldValue = select.value;
+      select.replaceChildren();
+      chapters.forEach((name, index) => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = `${index + 1}. ${name}`;
+        select.append(option);
+      });
+      if (chapters.length) {
+        select.value = chapters.includes(oldValue)
+          ? oldValue
+          : (id === 'fromChapter' ? chapters[0] : chapters[chapters.length - 1]);
+      }
+    }
   }
 
   function groupsOf(items) {
@@ -532,15 +578,16 @@
             const lastGroup = pdfGroups.at(-1);
             const previous = lastGroup?.at(-1);
             const previousChapter = previous ? parseChapter(previous.file) : null;
-            if (chapter && previousChapter && chapter.key === previousChapter.key &&
-                chapter.n === previousChapter.n + 1) lastGroup.push(item);
+            if (chapter && previousChapter && chapter.key === previousChapter.key && chapter.n === previousChapter.n + 1) lastGroup.push(item);
             else pdfGroups.push([item]);
           }
           result.push(...pdfGroups);
         }
       } else {
+        const cover = section.find(item => isRootCover(item.file));
         const chapters = [];
         for (const item of section) {
+          if (isRootCover(item.file)) continue;
           const chapterName = imageChapterOf(item.file);
           let last = chapters.at(-1);
           if (!last || last.name !== chapterName) {
@@ -549,10 +596,27 @@
           }
           last.items.push(item);
         }
-        const count = Math.max(1, Number($('mergeCount').value) || 1);
-        for (let i = 0; i < chapters.length; i += count) {
-          result.push(chapters.slice(i, i + count).flatMap(ch => ch.items));
+
+        let selected = chapters;
+        const mode = $('outputMode').value;
+        if (mode === 'range' && chapters.length) {
+          let from = chapters.findIndex(ch => ch.name === $('fromChapter').value);
+          let to = chapters.findIndex(ch => ch.name === $('toChapter').value);
+          if (from < 0) from = 0;
+          if (to < 0) to = chapters.length - 1;
+          if (from > to) [from, to] = [to, from];
+          selected = chapters.slice(from, to + 1);
         }
+
+        let groups = [];
+        if (mode === 'chapter') groups = selected.map(ch => ch.items);
+        else if (mode === 'batch') {
+          const count = Math.max(1, Number($('chaptersPerBook').value) || 5);
+          for (let i = 0; i < selected.length; i += count) groups.push(selected.slice(i, i + count).flatMap(ch => ch.items));
+        } else groups = selected.length ? [selected.flatMap(ch => ch.items)] : [];
+
+        if (mode === 'merge' && $('includeCover').checked && cover && groups.length) groups[0].unshift(cover);
+        result.push(...groups);
       }
       cursor = end;
     }
@@ -565,9 +629,19 @@
     const isImages = group.every(item => item.type === 'image');
 
     if (isImages) {
-      const chapters = [...new Set(group.map(item => imageChapterOf(item.file)))];
+      const chapters = [...new Set(group.filter(item => !isRootCover(item.file)).map(item => imageChapterOf(item.file)))];
+      if (!chapters.length) chapters.push('封面');
       if (customTitle) {
-        const first = index * Math.max(1, Number($('mergeCount').value) || 1) + 1;
+        let first = 1;
+        if ($('outputMode').value === 'batch') {
+          first = index * Math.max(1, Number($('chaptersPerBook').value) || 5) + 1;
+        } else if ($('outputMode').value === 'chapter') {
+          first = index + 1;
+        } else if ($('outputMode').value === 'range') {
+          const allChapters = [...new Set(queue.filter(item => item.type === 'image' && !isRootCover(item.file)).map(item => imageChapterOf(item.file)))];
+          const firstChapter = chapters[0];
+          first = Math.max(1, allChapters.indexOf(firstChapter) + 1);
+        }
         const last = first + chapters.length - 1;
         return safeName(chapters.length === 1
           ? `${customTitle}_${chapters[0]}`
@@ -1320,6 +1394,14 @@
       updatePageLabel();
     }
   }
+
+  ['outputMode', 'chaptersPerBook', 'fromChapter', 'toChapter', 'includeCover'].forEach(id => {
+    $(id).addEventListener('change', () => {
+      updateGenerationFields();
+      previewKey = '';
+      loadPreview();
+    });
+  });
 
   $('prev').onclick = () => {
     previewIndex = Math.max(0, previewIndex - 1);
