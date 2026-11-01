@@ -3,16 +3,18 @@
   let pdfjsLoadError = null;
 
   // Try two CDNs so one failed CDN does not immediately break the app.
-  const pdfjsSources = [
-    {
-      main: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs',
-      worker: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs'
-    },
-    {
-      main: 'https://unpkg.com/pdfjs-dist@4.10.38/build/pdf.min.mjs',
-      worker: 'https://unpkg.com/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs'
-    }
-  ];
+  
+const pdfjsSources = [
+  {
+    main: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.54/build/pdf.min.mjs',
+    worker: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.4.54/build/pdf.worker.min.mjs'
+  },
+  {
+    main: 'https://unpkg.com/pdfjs-dist@5.4.54/build/pdf.min.mjs',
+    worker: 'https://unpkg.com/pdfjs-dist@5.4.54/build/pdf.worker.min.mjs'
+  }
+];
+
 
   for (const source of pdfjsSources) {
     try {
