@@ -660,13 +660,19 @@
       return safeName(`${first === last ? first : `${first}-${last}`}${title ? ' ' + title : ''}`) + extension;
     }
     if (customTitle) {
+      // A single PDF should use the editable comic title exactly as entered.
+      // Do not append the PDF's own trailing number (e.g. FlashLight 70 -> FlashLight 7070).
+      if (group.length === 1) return safeName(customTitle) + extension;
+
       const numbers = group.map(item => {
         const match = item.file.name.match(/(\d+)(?!.*\d)/);
         return match ? Number(match[1]) : null;
       });
       const first = numbers[0] ?? index * Number($('mergeCount').value) + 1;
       const last = numbers.at(-1) ?? first + group.length - 1;
-      return safeName(group.length === 1 ? `${customTitle}${first}` : `${customTitle}${first}-${last}`) + extension;
+      const titleAlreadyEndsWithFirst = new RegExp(`(?:^|\\D)${first}$`).test(customTitle);
+      const baseTitle = titleAlreadyEndsWithFirst ? customTitle.replace(new RegExp(`${first}$`), '').trim() : customTitle;
+      return safeName(`${baseTitle || customTitle} ${first}-${last}`) + extension;
     }
     const stems = group.map(item => item.file.name.replace(/\.pdf$/i, ''));
     let name;
