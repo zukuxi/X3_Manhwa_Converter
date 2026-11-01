@@ -1603,25 +1603,7 @@ const pdfjsSources = [
       }
     });
   });
-      for (const [inputId, outputId] of [
-        ['threshold', 'thresholdValue'],
-        ['brightness', 'brightnessValue'],
-        ['strength', 'strengthValue']
-      ]) {
-        const output = $(outputId);
-
-        if (output) {
-          output.textContent =
-            $(inputId).value +
-            (inputId === 'strength' ? '%' : '');
-        }
-      }
-
-      if (previewPages[previewIndex]) {
-        paintPreview(previewPages[previewIndex]);
-      }
-    });
-  });
+    
 
   async function imageFileToCanvas(file) {
     const canvas = document.createElement('canvas');
