@@ -41,7 +41,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .preview-nav:disabled{opacity:.35;cursor:default}
 .language-switch{display:flex;justify-content:flex-end;gap:6px;margin-bottom:14px}
 .footer{font-size:12px;color:var(--muted);margin-top:18px}
-.queue{list-style:none;padding:0;margin:8px 0}.queue li{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding:10px 0}
+.queue{list-style:none;padding:0;margin:8px 0}.queue li{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding:10px 0}.queue-group{display:block!important;padding:0!important}.group-head{display:flex;align-items:center;gap:9px;padding:11px 2px;min-width:0}.drag-handle{flex:0 0 auto;cursor:grab;touch-action:none;color:var(--accent);font-size:21px;padding:2px 5px;user-select:none}.chapter-toggle{flex:1;min-width:0;text-align:left;background:transparent;color:var(--text);padding:5px 0;font-weight:650}.chapter-meta{display:block;color:var(--muted);font-size:12px;font-weight:400}.group-arrow{color:var(--muted);margin-left:6px}.queue-sublist{list-style:none;padding:0 0 0 30px;margin:0 0 8px;border-left:2px solid var(--line)}.queue-sublist[hidden]{display:none}.queue-sublist li{padding:7px 0}.queue-sublist .filename{font-size:13px;font-weight:500}.queue-sublist .file-controls button{padding:6px 9px;font-size:12px}.queue-group.sortable-ghost{opacity:.3}.queue-group.sortable-chosen{background:#202a38;border-radius:10px}.output-remove{background:#2a3445;color:var(--text)}
 .file-info{flex:1;min-width:0}.filename{overflow-wrap:anywhere;font-weight:600}.file-detail{color:var(--muted);font-size:.84rem;overflow-wrap:anywhere}.file-state{font-size:.83rem;color:var(--muted);white-space:nowrap}.ok{color:#8de0a8}.err{color:#ff9c9c}.file-controls{display:flex;align-items:center;flex-wrap:wrap;gap:5px}
 .section-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .download-options{margin-top:12px}
@@ -197,6 +197,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
 <script type="module" src="./app.js?v=3.0"></script>
 
 </body>

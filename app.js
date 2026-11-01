@@ -196,6 +196,9 @@
   let previewRequestId = 0;
   let outputDirectoryHandle = null;
   let savingFolder = false;
+  let titleWasEdited = false;
+  const expandedQueueGroups = new Set();
+  let queueSortable = null;
 
   const collator = new Intl.Collator('zh-CN', {
     numeric: true,
@@ -312,14 +315,36 @@
       status(tr('noPdf'), 0);
     }
     renderQueue();
+    updatePreviewSources();
     updateGenerationFields();
-    if (added && !$('title').value.trim()) {
-      const first = arr[0]?.file;
-      const relative = first?.webkitRelativePath || '';
-      const parts = relative.split('/').filter(Boolean);
-      $('title').value = parts.length > 1 ? parts[0] : (first?.name || '').replace(/\.[^.]+$/, '');
+    if (added && !titleWasEdited) {
+      const addedFiles = arr.map(entry => entry.file);
+      $('title').value = inferComicTitle(addedFiles);
     }
   }
+
+  function inferComicTitle(files) {
+    const usable = files.filter(file => !isRootCover(file));
+    if (!usable.length) return '';
+    const relativePaths = usable.map(file => (file.webkitRelativePath || '').split('/').filter(Boolean));
+    const folderPaths = relativePaths.filter(parts => parts.length > 1);
+    // Folder selection: use the selected root folder name, not the first chapter/file.
+    if (folderPaths.length && folderPaths.length === usable.length) return folderPaths[0][0];
+    // One explicitly selected PDF/image: use its filename without extension.
+    if (usable.length === 1) return usable[0].name.replace(/\.[^.]+$/, '');
+    // Multi-file selection: infer the common comic title from filenames such as Comic 01.pdf.
+    const stems = usable.map(file => file.name.replace(/\.[^.]+$/, ''));
+    let prefix = stems[0];
+    for (const stem of stems.slice(1)) {
+      let i = 0;
+      while (i < prefix.length && i < stem.length && prefix[i].toLowerCase() === stem[i].toLowerCase()) i++;
+      prefix = prefix.slice(0, i);
+    }
+    prefix = prefix.replace(/[\s._-]*\d+[\s._-]*$/, '').replace(/[\s._-]+$/, '').trim();
+    return prefix.length >= 2 ? prefix : stems[0];
+  }
+
+  $('title').addEventListener('input', () => { titleWasEdited = true; });
 
   $('pickFiles').addEventListener('click', () => $('file').click());
   $('pickFolder').addEventListener('click', () => $('folder').click());
@@ -333,6 +358,31 @@
     updateGenerationFields();
   });
 
+  function queueGroupKey(item, index) {
+    if (item.type === 'image') {
+      const parts = (item.file.webkitRelativePath || '').split('/').filter(Boolean);
+      const parent = parts.length > 1 ? parts.slice(0, -1).join('/') : '未分章图片';
+      return `image:${parent}`;
+    }
+    return `pdf:${fileKey(item.file)}:${index}`;
+  }
+
+  function getQueueGroups() {
+    const groups = [];
+    const byKey = new Map();
+    queue.forEach((item, index) => {
+      const key = queueGroupKey(item, index);
+      let group = byKey.get(key);
+      if (!group) {
+        group = { key, type: item.type, items: [] };
+        byKey.set(key, group);
+        groups.push(group);
+      }
+      group.items.push(item);
+    });
+    return groups;
+  }
+
   function renderQueue() {
     const ul = $('queue');
     ul.replaceChildren();
@@ -345,112 +395,125 @@
       ul.append(li);
     }
 
-    queue.forEach((item, index) => {
+    const groups = getQueueGroups();
+    for (const group of groups) {
       const li = document.createElement('li');
-      const info = document.createElement('div');
-      info.className = 'file-info';
+      li.className = 'queue-group';
+      li.dataset.groupKey = group.key;
 
-      const name = document.createElement('div');
-      name.className = 'filename';
-      name.textContent =
-        `${index + 1}. [${item.type === 'image' ? (lang === 'en' ? 'Image' : '图片') : 'PDF'}] ${item.file.webkitRelativePath || item.file.name}`;
-
-      const detail = document.createElement('div');
-      detail.className = 'file-detail';
-      detail.textContent =
-        `${(item.file.size / 1024 / 1024).toFixed(2)} MB`;
-
-      info.append(name, detail);
-
-      const state = document.createElement('span');
-      state.className = 'file-state ' +
-        (item.state === 'done'
-          ? 'ok'
-          : item.state === 'failed'
-            ? 'err'
-            : '');
-
-      state.textContent = tr(item.state);
-      li.append(info, state);
-
-      const controls = document.createElement('span');
-      controls.className = 'file-controls';
+      const head = document.createElement('div');
+      head.className = 'group-head';
 
       if (!running) {
-        for (const [symbol, direction] of [['↑', -1], ['↓', 1]]) {
-          const button = document.createElement('button');
-          button.className = 'secondary small';
-          button.textContent = symbol;
-          button.disabled = direction < 0
-            ? index === 0
-            : index === queue.length - 1;
-
-          button.title = lang === 'en'
-            ? (direction < 0 ? 'Move up' : 'Move down')
-            : (direction < 0 ? '上移' : '下移');
-
-          button.onclick = () => {
-            const target = index + direction;
-
-            if (target < 0 || target >= queue.length) return;
-
-            [queue[index], queue[target]] =
-              [queue[target], queue[index]];
-
-            renderQueue();
-            loadPreview();
-          };
-
-          controls.append(button);
-        }
-
-        const removeButton = document.createElement('button');
-        removeButton.className = 'secondary small';
-        removeButton.textContent = tr('remove');
-        removeButton.title = lang === 'en'
-          ? 'Remove this file from the queue'
-          : '从队列移除此文件';
-
-        removeButton.onclick = () => {
-          if (running) return;
-
-          const wasPreviewFile = index === 0;
-          queue.splice(index, 1);
-
-          if (wasPreviewFile) {
-            previewKey = '';
-            previewPages = [];
-            previewIndex = 0;
-            previewRequestId++;
-
-            if (previewPdf) {
-              previewPdf.destroy();
-              previewPdf = null;
-            }
-          }
-
-          renderQueue();
-          updateGenerationFields();
-          loadPreview();
-          status(tr('removed'), 0);
-        };
-
-        controls.append(removeButton);
+        const handle = document.createElement('span');
+        handle.className = 'drag-handle';
+        handle.textContent = '⠿';
+        handle.title = lang === 'en' ? 'Drag to reorder' : '按住拖动调整顺序';
+        head.append(handle);
       }
 
-      li.append(controls);
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'chapter-toggle';
+      const isImageGroup = group.type === 'image';
+      const firstFile = group.items[0].file;
+      const parts = (firstFile.webkitRelativePath || '').split('/').filter(Boolean);
+      const label = isImageGroup
+        ? (parts.length > 1 ? parts.at(-2) : '未分章图片')
+        : firstFile.name;
+      const totalSize = group.items.reduce((sum, item) => sum + item.file.size, 0);
+      const done = group.items.filter(item => item.state === 'done').length;
+      const failed = group.items.filter(item => item.state === 'failed').length;
+      const meta = document.createElement('span');
+      meta.className = 'chapter-meta';
+      meta.textContent = isImageGroup
+        ? `${group.items.length} 张图片 · ${(totalSize / 1024 / 1024).toFixed(2)} MB${done ? ` · ${done} 完成` : ''}${failed ? ` · ${failed} 失败` : ''}`
+        : `${(totalSize / 1024 / 1024).toFixed(2)} MB · ${tr(group.items[0].state)}`;
+      toggle.append(document.createTextNode(`${isImageGroup ? '📁 ' : '📄 '}${label}`), meta);
+      const arrow = document.createElement('span');
+      arrow.className = 'group-arrow';
+      const expanded = expandedQueueGroups.has(group.key);
+      arrow.textContent = expanded ? '▾' : '▸';
+      toggle.append(arrow);
+      toggle.onclick = () => {
+        if (expandedQueueGroups.has(group.key)) expandedQueueGroups.delete(group.key);
+        else expandedQueueGroups.add(group.key);
+        renderQueue();
+      };
+      head.append(toggle);
+      li.append(head);
+
+      const sublist = document.createElement('ul');
+      sublist.className = 'queue-sublist';
+      sublist.hidden = !expanded;
+      group.items.forEach(item => {
+        const child = document.createElement('li');
+        const info = document.createElement('div');
+        info.className = 'file-info';
+        const name = document.createElement('div');
+        name.className = 'filename';
+        name.textContent = item.file.webkitRelativePath || item.file.name;
+        const detail = document.createElement('div');
+        detail.className = 'file-detail';
+        detail.textContent = `${(item.file.size / 1024 / 1024).toFixed(2)} MB`;
+        info.append(name, detail);
+        const state = document.createElement('span');
+        state.className = 'file-state ' + (item.state === 'done' ? 'ok' : item.state === 'failed' ? 'err' : '');
+        state.textContent = tr(item.state);
+        child.append(info, state);
+        if (!running) {
+          const controls = document.createElement('span');
+          controls.className = 'file-controls';
+          const removeButton = document.createElement('button');
+          removeButton.className = 'secondary small';
+          removeButton.textContent = tr('remove');
+          removeButton.onclick = () => {
+            const index = queue.indexOf(item);
+            if (index >= 0) queue.splice(index, 1);
+            renderQueue();
+            updateGenerationFields();
+            updatePreviewSources();
+            loadPreview();
+            status(tr('removed'), 0);
+          };
+          controls.append(removeButton);
+          child.append(controls);
+        }
+        sublist.append(child);
+      });
+      li.append(sublist);
       ul.append(li);
-    });
+    }
 
-    const hasPending = queue.some(item =>
-      item.state === 'waiting' || item.state === 'failed'
-    );
+    if (window.Sortable) {
+      if (queueSortable) queueSortable.destroy();
+      if (!running && groups.length > 1) {
+        queueSortable = new Sortable(ul, {
+          animation: 160,
+          handle: '.drag-handle',
+          draggable: '.queue-group',
+          delay: 120,
+          delayOnTouchOnly: true,
+          touchStartThreshold: 4,
+          onEnd: () => {
+            const orderedKeys = [...ul.querySelectorAll(':scope > .queue-group')].map(el => el.dataset.groupKey);
+            const currentGroups = getQueueGroups();
+            const groupMap = new Map(currentGroups.map(group => [group.key, group]));
+            queue = orderedKeys.flatMap(key => groupMap.get(key)?.items || []);
+            renderQueue();
+            updatePreviewSources();
+            previewKey = '';
+            loadPreview();
+          }
+        });
+      }
+    }
 
+    const hasPending = queue.some(item => item.state === 'waiting' || item.state === 'failed');
     $('go').disabled = running || !hasPending;
     $('clear').disabled = running || (!queue.length && !outputs.length);
     $('cancel').disabled = !running;
     $('zip').disabled = running || savingFolder || !outputs.length;
-
   }
 
   function renderOutputs() {
@@ -489,7 +552,19 @@
       button.disabled = running || savingFolder;
       button.onclick = () => download(output.blob, output.name);
 
-      li.append(info, button);
+      const removeButton = document.createElement('button');
+      removeButton.className = 'small output-remove secondary';
+      removeButton.textContent = lang === 'en' ? 'Delete' : '删除';
+      removeButton.disabled = running || savingFolder;
+      removeButton.onclick = () => {
+        if (running || savingFolder) return;
+        outputs.splice(index, 1);
+        renderOutputs();
+        renderQueue();
+        status(lang === 'en' ? 'Output deleted.' : '已删除这本转换结果。', 0);
+      };
+
+      li.append(info, button, removeButton);
       ul.append(li);
     });
   }
@@ -2001,6 +2076,9 @@
 
     queue = [];
     outputs = [];
+    $('title').value = '';
+    titleWasEdited = false;
+    expandedQueueGroups.clear();
     previewPages = [];
     previewRequestId++;
 
