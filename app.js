@@ -34,17 +34,17 @@
     zh: {
       heading: 'X3 PDF / 漫画图片 → XTC / XTCH 转换器',
       lead: 'PDF 和漫画图片统一使用 test 的 528×792 连续拼接算法；PDF 以 2 倍渲染，图片按原始分辨率逐张读取，连续拼接、不重叠，每累计 792 像素输出一页。文件只在本机浏览器处理。', 
-      pickPdfs: '选择一个或多个 PDF',
-      pickImageFolder: '选择漫画图片文件夹',
-      imageFolderHint: '递归读取 JPG、PNG、WebP 等图片，按章节文件夹和自然数字顺序排列',
-      pickImages: '或选择多张漫画图片',
+      pickFiles: '选择单个或多个文件',
+      filesHint: '可选择 PDF 或 JPG、PNG、WebP 等漫画图片；支持一次选择多种文件。',
       pickFolder: '选择整个文件夹',
-      folderHint: '会递归读取选择文件夹中的 PDF',
+      folderHint: '递归读取文件夹中的 PDF 和 JPG、PNG、WebP 等漫画图片，按文件夹和自然数字顺序排列。',
       depthLabel: '输出格式',
       ditherLabel: '抖动算法',
       thresholdLabel: '黑白阈值（无抖动时）',
       contrastLabel: '对比度',
       brightnessLabel: '亮度',
+      maskModeLabel: '蒙版兼容模式（黑页 PDF）',
+      maskModeHint: '仅对 PDF 生效；开启后使用 PDF.js 打印渲染模式，尝试修复黑页或蒙版异常。默认关闭。',
       strengthLabel: '抖动强度',
       mergeLabel: '每几个 PDF / 章节合并成一本',
       titleLabel: '自定义书名（可选）',
@@ -68,7 +68,7 @@
       queueTitle: '源文件队列',
       queueHint: '可调整 PDF 和图片的顺序，也可以删除不需要转换的文件。',
       languageLabel: '语言 / Language',
-      selectFirst: '请先选择 PDF 文件或漫画图片文件夹。',
+      selectFirst: '请先选择文件或整个文件夹。',
       noPdf: '没有找到支持的 PDF 或图片文件。',
       alreadyAdded: '文件已在队列中。',
       added: '已加入',
@@ -110,17 +110,17 @@
     en: {
       heading: 'X3 PDF / Manga Images → XTC / XTCH Converter',
       lead: 'PDFs and manga images use the same 528×792 continuous stitching algorithm from test. PDFs are rendered at 2×; images are read one at a time at their original resolution. No overlap is added. Files stay in your browser.', 
-      pickPdfs: 'Select one or more PDFs',
-      pickImageFolder: 'Select a manga image folder',
-      imageFolderHint: 'Read JPG, PNG, WebP and other images recursively, sorted by chapter and natural filename order',
-      pickImages: 'Or select multiple manga images',
-      pickFolder: 'Select a folder',
-      folderHint: 'PDFs inside the selected folder are detected recursively',
+      pickFiles: 'Select one or more files',
+      filesHint: 'Choose PDFs or manga images such as JPG, PNG and WebP. You can select different file types together.',
+      pickFolder: 'Select an entire folder',
+      folderHint: 'Recursively reads PDFs and manga images such as JPG, PNG and WebP, sorted by folder and natural filename order.',
       depthLabel: 'Output format',
       ditherLabel: 'Dithering algorithm',
       thresholdLabel: 'Threshold (when dithering is off)',
       contrastLabel: 'Contrast',
       brightnessLabel: 'Brightness',
+      maskModeLabel: 'Mask compatibility mode (black-page PDFs)',
+      maskModeHint: 'PDF only. Uses PDF.js print rendering to work around black pages or mask-rendering issues. Off by default.',
       strengthLabel: 'Dithering strength',
       mergeLabel: 'Merge every N PDFs / chapters into one book',
       titleLabel: 'Custom book title (optional)',
@@ -144,7 +144,7 @@
       queueTitle: 'Source file queue',
       queueHint: 'Reorder PDFs and images or remove files you do not want to convert.',
       languageLabel: 'Language',
-      selectFirst: 'Select PDF files or a manga image folder first.',
+      selectFirst: 'Select files or an entire folder first.',
       noPdf: 'No supported PDF or image files found.',
       alreadyAdded: 'Files are already in the queue.',
       added: 'Added',
@@ -270,19 +270,24 @@
 
   const imageExt = /\.(jpe?g|png|webp|bmp|gif|avif)$/i;
 
-  function addFiles(files, type = 'pdf') {
+  function addFiles(files) {
     const known = new Set(queue.map(item => fileKey(item.file)));
     const arr = [...files]
-      .filter(file => type === 'pdf'
-        ? /\.pdf$/i.test(file.name)
-        : imageExt.test(file.name) && (!file.type || file.type.startsWith('image/')))
+      .map(file => ({
+        file,
+        type: /\.pdf$/i.test(file.name)
+          ? 'pdf'
+          : (imageExt.test(file.name) && (!file.type || file.type.startsWith('image/')) ? 'image' : null)
+      }))
+      .filter(item => item.type)
       .sort((a, b) => collator.compare(
-        a.webkitRelativePath || a.name,
-        b.webkitRelativePath || b.name
+        a.file.webkitRelativePath || a.file.name,
+        b.file.webkitRelativePath || b.file.name
       ));
 
     let added = 0;
-    for (const file of arr) {
+    for (const entry of arr) {
+      const { file, type } = entry;
       const key = fileKey(file);
       if (!known.has(key)) {
         queue.push({ file, type, state: 'waiting' });
@@ -304,19 +309,11 @@
   }
 
   $('file').addEventListener('change', event => {
-    addFiles(event.target.files, 'pdf');
+    addFiles(event.target.files);
     event.target.value = '';
   });
   $('folder').addEventListener('change', event => {
-    addFiles(event.target.files, 'pdf');
-    event.target.value = '';
-  });
-  $('imageFolder').addEventListener('change', event => {
-    addFiles(event.target.files, 'image');
-    event.target.value = '';
-  });
-  $('imageFiles').addEventListener('change', event => {
-    addFiles(event.target.files, 'image');
+    addFiles(event.target.files);
     event.target.value = '';
   });
 
@@ -1087,6 +1084,7 @@
       threshold: Number($('threshold').value),
       contrast: Number($('contrast').value),
       brightness: Number($('brightness').value),
+      maskMode: $('maskMode').checked,
       strength: Number($('strength').value)
     };
   }
@@ -1247,7 +1245,8 @@
             await page.render({
               canvasContext: context,
               viewport,
-              background: 'rgb(255,255,255)'
+              background: 'rgb(255,255,255)',
+              intent: $('maskMode').checked ? 'print' : 'display'
             }).promise;
 
             if (requestId !== previewRequestId) {
@@ -1347,7 +1346,7 @@
 
   [
     'depth', 'dither', 'threshold',
-    'contrast', 'brightness', 'strength'
+    'contrast', 'brightness', 'strength', 'maskMode'
   ].forEach(id => {
     $(id).addEventListener('input', () => {
       for (const [inputId, outputId] of [
@@ -1474,7 +1473,8 @@
           await page.render({
             canvasContext: context,
             viewport,
-            background: 'rgb(255,255,255)'
+            background: 'rgb(255,255,255)',
+            intent: current.maskMode ? 'print' : 'display'
           }).promise;
           stitcher.appendCanvas(canvas, gray => {
             if (cancelled) throw Error('Cancelled');

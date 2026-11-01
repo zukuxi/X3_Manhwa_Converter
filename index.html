@@ -210,24 +210,15 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   </p>
 
   <div class="drop">
-    <strong data-i18n="pickPdfs">选择一个或多个 PDF</strong>
-    <input id="file" type="file" accept=".pdf,application/pdf" multiple>
+    <strong data-i18n="pickFiles">选择单个或多个文件</strong>
+    <p class="hint" data-i18n="filesHint">可选择 PDF 或 JPG、PNG、WebP 等漫画图片；支持一次选择多种文件。</p>
+    <input id="file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.bmp,.gif,.avif,application/pdf,image/*" multiple>
   </div>
 
   <div class="drop">
     <strong data-i18n="pickFolder">选择整个文件夹</strong>
-    <p class="hint" data-i18n="folderHint">会递归读取选择文件夹中的 PDF</p>
-    <input id="folder" type="file" accept=".pdf,application/pdf" webkitdirectory directory multiple>
-  </div>
-
-  <div class="drop">
-    <strong data-i18n="pickImageFolder">选择漫画图片文件夹</strong>
-    <p class="hint" data-i18n="imageFolderHint">递归读取 JPG、PNG、WebP 等图片，按文件夹和自然数字顺序排列</p>
-    <input id="imageFolder" type="file" accept="image/*" webkitdirectory directory multiple>
-  </div>
-  <div class="drop">
-    <strong data-i18n="pickImages">或选择多张漫画图片</strong>
-    <input id="imageFiles" type="file" accept="image/*" multiple>
+    <p class="hint" data-i18n="folderHint">递归读取文件夹中的 PDF 和 JPG、PNG、WebP 等漫画图片，按文件夹和自然数字顺序排列。</p>
+    <input id="folder" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.bmp,.gif,.avif,application/pdf,image/*" webkitdirectory directory multiple>
   </div>
 
   <div class="row">
@@ -269,6 +260,12 @@ button:disabled { opacity: .45; cursor: not-allowed; }
       <label for="brightness" data-i18n="brightnessLabel">亮度</label>
       <input id="brightness" type="range" min="-80" max="80" value="0">
       <span class="slider-value" id="brightnessValue">0</span>
+    </div>
+
+    <div class="field">
+      <label for="maskMode" data-i18n="maskModeLabel">蒙版兼容模式（黑页 PDF）</label>
+      <input id="maskMode" type="checkbox">
+      <p class="hint" data-i18n="maskModeHint">仅对 PDF 生效；开启后使用 PDF.js 打印渲染模式，尝试修复黑页或蒙版异常。默认关闭。</p>
     </div>
 
     <div class="field">

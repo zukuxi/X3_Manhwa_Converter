@@ -1,11 +1,11 @@
 # X3 PDF / Manga Image Folder to XTC / XTCH
 
-一个同时支持 **PDF 文件** 和 **漫画图片文件夹** 的 Xteink X3 转换器。转换核心以 `zukuxi/test` 为基础，PDF 与图片统一使用同一套 528 × 792 连续拼接、灰度处理、抖动和 XTC / XTCH 编码逻辑。
+一个同时支持 **PDF 文件** 和 **漫画图片** 的 Xteink X3 转换器。转换核心以 `zukuxi/test` 为基础，PDF 与图片统一使用同一套 528 × 792 连续拼接、灰度处理、抖动和 XTC / XTCH 编码逻辑。
 
 ## 功能
 
-- **PDF 输入：** 选择单个或多个 PDF，也可以选择包含 PDF 的文件夹。
-- **漫画图片输入：** 选择漫画总文件夹（内部可以按章节建立子文件夹），也可以直接多选 JPG、PNG、WebP、BMP、GIF、AVIF 图片。
+- **统一文件输入：** 可一次选择一个或多个 PDF、JPG、PNG、WebP、BMP、GIF、AVIF 文件，也可以选择整个文件夹，递归读取其中的 PDF 和漫画图片。
+- **自动识别类型：** PDF 使用 PDF.js 渲染；图片按章节文件夹和自然数字顺序排列后逐张处理。
 - **统一转换核心：** PDF 页面以 2 倍比例渲染；图片逐张按原始分辨率读取。两种输入最终都进入 `test` 原有的拼接器和图像处理流程。
 - **连续拼接：** 目标尺寸 528 × 792，按宽度等比例缩放，连续填充页面，重叠率 0%；每满 792 行输出一页，最后一页底部补白。
 - **批量合并：** PDF 可按每 1 / 2 / 3 / 4 / 5 / 10 / 20 个合并；图片文件夹按章节分组，可设置每 N 个章节输出一本。
@@ -75,7 +75,7 @@
 ## 使用
 
 1. 将本仓库部署到 GitHub Pages。
-2. 选择 PDF 文件 / PDF 文件夹，或漫画图片文件夹 / 多张图片。
+2. 选择单个/多个文件，或选择整个文件夹；程序会自动识别 PDF 和漫画图片。
 3. 选择 XTC 或 XTCH。
 4. 设置每几个 PDF 或章节合并成一本。
 5. 调整抖动、亮度和对比度，查看前 5 页预览。
@@ -90,12 +90,12 @@
 
 # X3 PDF / Manga Image Folder to XTC / XTCH
 
-A browser-based converter for **PDF files** and **manga image folders** for the Xteink X3. Based on `zukuxi/test`, both input types share the same 528 × 792 continuous stitching, grayscale, dithering, and XTC / XTCH encoding pipeline.
+A browser-based converter for **PDF files** and **manga images** for the Xteink X3. Based on `zukuxi/test`, both input types share the same 528 × 792 continuous stitching, grayscale, dithering, and XTC / XTCH encoding pipeline.
 
 ## Features
 
-- Select one or multiple PDFs, or recursively load PDFs from a folder.
-- Select a manga folder containing chapter subfolders, or select multiple image files directly.
+- Select one or multiple supported files (PDF and manga images), or select an entire folder to recursively load both PDFs and images.
+- File types are detected automatically; images are ordered by folder path and natural filename order.
 - PDFs are rendered at 2×. Images are read one at a time at their original resolution.
 - Both input types use the same original `test` stitcher and image-processing pipeline.
 - 528 × 792 output pages, continuous stitching, 0% overlap, and white padding on the final partial page.
@@ -143,3 +143,8 @@ Images are loaded and processed one at a time. The converter does not build a hu
 ## License and acknowledgments
 
 The PDF rendering, continuous stitching, grayscale processing, and XTC / XTCH encoding core are retained from the `test` base project. The original XTC encoding projects include [srokl/xtcjsapp](https://github.com/srokl/xtcjsapp) and [varo6/xtcjs](https://github.com/varo6/xtcjs). Retain applicable copyright and license notices.
+
+
+### PDF 蒙版兼容模式
+
+设置中保留“蒙版兼容模式（黑页 PDF）”开关，默认关闭。开启后，PDF 预览和正式转换均使用 PDF.js 的 `print` 渲染意图；该选项仅影响 PDF，不影响漫画图片输入。
