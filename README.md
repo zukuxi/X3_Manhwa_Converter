@@ -2,6 +2,8 @@
 
 将条漫 PDF 或图片文件夹转换为 Xteink X3 使用的 XTC / XTCH 文件。所有文件处理均在本机浏览器完成。
 
+https://zukuxi.github.io/X3_Manhwa_Converter/
+
 ## 项目基础与来源
 
 本项目以 [x3-manhwa-folder-to-xtc](https://github.com/zukuxi/x3-manhwa-folder-to-xtc) 为基础进行扩展和整合。保留原项目的条漫转换方向，并在此基础上增加 PDF 输入、统一文件处理、队列管理、预览及多种输出方式。
@@ -32,9 +34,6 @@
 - PDF 支持按数量合并及连续章节模式。
 - 支持单独下载、ZIP 下载和选择文件夹自动保存。
 
-## 部署
-
-将 `index.html`、`app.js` 和 `LICENSE` 上传到 GitHub 仓库，并启用 GitHub Pages 即可部署。
 
 ## 许可与致谢
 
