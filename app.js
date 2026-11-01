@@ -1570,11 +1570,39 @@ const pdfjsSources = [
     updatePageLabel();
   };
 
-  [
+    [
     'depth', 'dither', 'threshold',
     'contrast', 'brightness', 'strength', 'maskMode'
   ].forEach(id => {
     $(id).addEventListener('input', () => {
+      for (const [inputId, outputId] of [
+        ['threshold', 'thresholdValue'],
+        ['brightness', 'brightnessValue'],
+        ['strength', 'strengthValue']
+      ]) {
+        const output = $(outputId);
+
+        if (output) {
+          output.textContent =
+            $(inputId).value +
+            (inputId === 'strength' ? '%' : '');
+        }
+      }
+
+      // 蒙版模式改变时，必须重新渲染 PDF，而不是只刷新旧预览
+      if (id === 'maskMode') {
+        previewKey = '';
+        previewPages = [];
+        previewIndex = 0;
+        loadPreview();
+        return;
+      }
+
+      if (previewPages[previewIndex]) {
+        paintPreview(previewPages[previewIndex]);
+      }
+    });
+  });
       for (const [inputId, outputId] of [
         ['threshold', 'thresholdValue'],
         ['brightness', 'brightnessValue'],
