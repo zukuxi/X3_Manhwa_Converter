@@ -31,7 +31,6 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .status{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
 .check{display:flex;align-items:center;gap:8px;margin-top:12px}.check input{width:18px;height:18px;flex:0 0 auto}
 .range-field{margin-top:14px}.range-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.range-head label{margin:0}.range-value{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700}
-.mask-toggle{display:flex;align-items:center;gap:9px;margin-top:12px}.mask-toggle input{width:18px;height:18px}
 .preview-viewer{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px}
 .preview-page-wrap{flex:1;min-width:0;max-width:360px;text-align:center}
 .preview-page-label{font-size:13px;color:var(--muted);margin-bottom:8px}
@@ -131,7 +130,6 @@ input[type=range]{width:100%;accent-color:var(--accent)}
   </div>
   <div class="row">
     <div class="field"><label for="contrast" data-i18n="contrastLabel">对比度</label><select id="contrast"><option value="0">无</option><option value="1">轻度</option><option value="2" selected>中等</option><option value="3">强</option></select></div>
-    <div class="field"><label for="maskMode" data-i18n="maskModeLabel">蒙版兼容模式</label><label class="mask-toggle"><input id="maskMode" type="checkbox"><span data-i18n="maskModeShort">启用（仅 PDF）</span></label></div>
   </div>
   <div class="row">
     <div class="field range-field"><div class="range-head"><label for="threshold" data-i18n="thresholdLabel">黑白阈值</label><span class="range-value" id="thresholdValue">128</span></div><input id="threshold" type="range" min="0" max="255" value="128"></div>

@@ -53,13 +53,11 @@ const pdfjsSources = [
       chaptersPerBookLabel: '每本包含章节数',
       pdfMergeLabel: 'PDF 合并数量',
       settingsTitle: '③ 转换设置',
-      maskModeShort: '启用（仅 PDF）',
       depthLabel: '输出格式',
       ditherLabel: '抖动算法',
       thresholdLabel: '黑白阈值（无抖动时）',
       contrastLabel: '对比度',
       brightnessLabel: '亮度',
-      maskModeLabel: '蒙版兼容模式',
       strengthLabel: '抖动强度',
       chapterMode: 'PDF 章节模式：将标题相同、章节号连续的文件合并',
       previewTitle: '前 5 页预览',
@@ -113,14 +111,11 @@ const pdfjsSources = [
       chaptersPerBookLabel: 'Chapters per book',
       pdfMergeLabel: 'PDF merge count',
       settingsTitle: '③ Conversion settings',
-      maskModeShort: 'Enable (PDF only)',
       depthLabel: 'Output format',
       ditherLabel: 'Dithering algorithm',
       thresholdLabel: 'Threshold (when dithering is off)',
       contrastLabel: 'Contrast',
       brightnessLabel: 'Brightness',
-      maskModeLabel: 'Mask compatibility mode (black-page PDFs)',
-      maskModeHint: 'PDF only. Uses PDF.js print rendering to work around black pages or mask-rendering issues. Off by default.',
       strengthLabel: 'Dithering strength',
       mergeLabel: 'Merge every N PDFs into one book',
       chapterMode: 'PDF chapter mode: merge consecutive files with matching titles',
@@ -1291,7 +1286,6 @@ const pdfjsSources = [
       threshold: Number($('threshold').value),
       contrast: Number($('contrast').value),
       brightness: Number($('brightness').value),
-      maskMode: $('maskMode').checked,
       strength: Number($('strength').value)
     };
   }
@@ -1457,7 +1451,6 @@ const pdfjsSources = [
               canvasContext: context,
               viewport,
               background: 'rgb(255,255,255)',
-              intent: $('maskMode').checked ? 'print' : 'display'
             }).promise;
 
             if (requestId !== previewRequestId) {
@@ -1572,7 +1565,7 @@ const pdfjsSources = [
 
     [
     'depth', 'dither', 'threshold',
-    'contrast', 'brightness', 'strength', 'maskMode'
+    'contrast', 'brightness', 'strength'
   ].forEach(id => {
     $(id).addEventListener('input', () => {
       for (const [inputId, outputId] of [
@@ -1588,17 +1581,7 @@ const pdfjsSources = [
             (inputId === 'strength' ? '%' : '');
         }
       }
-
-      // 蒙版模式改变时，必须重新渲染 PDF，而不是只刷新旧预览
-      if (id === 'maskMode') {
-        previewKey = '';
-        previewPages = [];
-        previewIndex = 0;
-        loadPreview();
-        return;
-      }
-
-      if (previewPages[previewIndex]) {
+if (previewPages[previewIndex]) {
         paintPreview(previewPages[previewIndex]);
       }
     });
@@ -1734,7 +1717,6 @@ const pdfjsSources = [
             canvasContext: context,
             viewport,
             background: 'rgb(255,255,255)',
-            intent: current.maskMode ? 'print' : 'display'
           }).promise;
           stitcher.appendCanvas(canvas, gray => {
             if (cancelled) throw Error('Cancelled');
