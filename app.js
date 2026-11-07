@@ -381,17 +381,40 @@ const pdfjsSources = [
     return groups;
   }
 
+  function getTitleNumberParts(file) {
+    // 只提取文件标题中的数字片段，不让中文/英文标题文字影响章节顺序。
+    // 例如“心灵空隙 17.pdf”和“Mind the Gap 03话.pdf”分别得到 [17]、[03]。
+    const title = String(file.name || '').replace(/\.[^.]+$/, '');
+    return title.match(/\d+/g) || [];
+  }
+
+  function compareIntegerStrings(a, b) {
+    // 用字符串比较整数，避免超长章节号转换成 Number 后丢失精度。
+    const aa = a.replace(/^0+(?=\d)/, '');
+    const bb = b.replace(/^0+(?=\d)/, '');
+    if (aa.length !== bb.length) return aa.length - bb.length;
+    return aa < bb ? -1 : aa > bb ? 1 : 0;
+  }
+
   function sortQueueNumerically() {
     if (running || queue.length < 2) return;
-    queue.sort((a, b) => collator.compare(
-      a.file.webkitRelativePath || a.file.name,
-      b.file.webkitRelativePath || b.file.name
-    ));
+    queue.sort((a, b) => {
+      const an = getTitleNumberParts(a.file);
+      const bn = getTitleNumberParts(b.file);
+      // 有章节数字的文件排在没有数字的文件前面。
+      if (!an.length || !bn.length) return an.length ? -1 : bn.length ? 1 : 0;
+      const count = Math.min(an.length, bn.length);
+      for (let i = 0; i < count; i++) {
+        const result = compareIntegerStrings(an[i], bn[i]);
+        if (result) return result;
+      }
+      return an.length - bn.length;
+    });
     renderQueue();
     updatePreviewSources();
     previewKey = '';
     loadPreview();
-    status(lang === 'en' ? 'Queue sorted numerically.' : '已按文件名中的数字顺序排列。', 0);
+    status(lang === 'en' ? 'Queue sorted by title numbers.' : '已仅按标题中的数字部分排列。', 0);
   }
 
   function renderQueue() {
