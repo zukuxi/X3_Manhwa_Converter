@@ -72,7 +72,7 @@ const pdfjsSources = [
       folderChosen: '已选择保存文件夹：',
       outputsTitle: '转换结果',
       start: '开始转换', cancel: '取消', zipDownload: '下载全部结果 ZIP', clear: '清空队列',
-      remove: '删除', queueTitle: '源文件队列', queueHint: '可调整文件顺序，也可以删除不需要转换的文件。',
+      remove: '删除', queueTitle: '源文件队列', queueHint: '可调整文件顺序，也可以删除不需要转换的文件。', sortNumeric: '按数字排序',
       languageLabel: '语言 / Language',
       selectFirst: '尚未选择条漫。', noPdf: '没有找到支持的 PDF 或图片文件。',
       alreadyAdded: '文件已在队列中。', added: '已加入', pdfUnit: '个文件。',
@@ -139,6 +139,7 @@ const pdfjsSources = [
       remove: 'Remove',
       queueTitle: 'Source file queue',
       queueHint: 'Reorder files or remove items you do not want to convert.',
+      sortNumeric: 'Sort numerically',
       languageLabel: 'Language',
       selectFirst: 'Select files or an entire folder first.',
       noPdf: 'No supported PDF or image files found.',
@@ -380,6 +381,19 @@ const pdfjsSources = [
     return groups;
   }
 
+  function sortQueueNumerically() {
+    if (running || queue.length < 2) return;
+    queue.sort((a, b) => collator.compare(
+      a.file.webkitRelativePath || a.file.name,
+      b.file.webkitRelativePath || b.file.name
+    ));
+    renderQueue();
+    updatePreviewSources();
+    previewKey = '';
+    loadPreview();
+    status(lang === 'en' ? 'Queue sorted numerically.' : '已按文件名中的数字顺序排列。', 0);
+  }
+
   function renderQueue() {
     const ul = $('queue');
     ul.replaceChildren();
@@ -483,8 +497,14 @@ const pdfjsSources = [
     }
 
     if (window.Sortable) {
-      if (queueSortable) queueSortable.destroy();
-      if (!running && groups.length > 1) {
+      // Sortable.destroy() sets instance.el to null. Clear our reference first,
+      // otherwise a later render may try to destroy the same instance twice.
+      if (queueSortable) {
+        const oldSortable = queueSortable;
+        queueSortable = null;
+        if (oldSortable.el) oldSortable.destroy();
+      }
+      if (!running && groups.length > 1 && ul.isConnected) {
         queueSortable = new Sortable(ul, {
           animation: 160,
           handle: '.drag-handle',
@@ -508,6 +528,7 @@ const pdfjsSources = [
 
     const hasPending = queue.some(item => item.state === 'waiting' || item.state === 'failed');
     $('go').disabled = running || !hasPending;
+    $('sortNumeric').disabled = running || queue.length < 2;
     $('clear').disabled = running || (!queue.length && !outputs.length);
     $('cancel').disabled = !running;
     $('zip').disabled = running || savingFolder || !outputs.length;
@@ -2109,6 +2130,8 @@ if (previewPages[previewIndex]) {
   };
 
   // Initialise labels and controls.
+  $('sortNumeric').addEventListener('click', sortQueueNumerically);
+
   renderQueue();
   renderOutputs();
   updateGenerationFields();
